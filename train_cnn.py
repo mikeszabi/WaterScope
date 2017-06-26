@@ -20,7 +20,10 @@ from cntk import Trainer
 from cntk import momentum_sgd, learning_rate_schedule, UnitType, momentum_as_time_constant_schedule
 from cntk.logging import log_number_of_parameters, ProgressPrinter
 
-output_base_dir=os.path.join(r'd:\DATA\WaterScope')
+user='picturio'
+output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
+output_base_dir=r'd:\DATA\WaterScope'
+
 train_dir=os.path.join(output_base_dir,'Training')
 
 model_file=os.path.join(train_dir,'cnn_model.dnn')

@@ -29,6 +29,11 @@ from PIL import Image
 
 #%matplotlib inline
 
+user='picturio'
+output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
+output_base_dir=r'd:\DATA\WaterScope'
+
+
 # Config matplotlib for inline plotting
 
 imgSize=32
@@ -39,7 +44,6 @@ num_classes  = 6
 label_base=np.zeros(num_classes)
 
 # Paths for saving the text files
-output_base_dir=os.path.join(r'd:\DATA\WaterScope')
 train_dir=os.path.join(output_base_dir,'Training')
 
 train_image_list_file=os.path.join(train_dir,'images_train.csv')

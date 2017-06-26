@@ -16,6 +16,8 @@ from PIL import Image
 
 from skimage import feature
 from skimage import morphology
+from skimage import measure
+
 from scipy import ndimage
 
 from skimage.color import rgb2gray
@@ -23,8 +25,10 @@ from skimage.color import rgb2gray
 import pandas as pd
 import numpy as np
 
-
+user='picturio'
+data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 data_dir=r'd:\DATA\WaterScope'
+
 image_dir=os.path.join(data_dir,'original')
 crop_dir=os.path.join(data_dir,'cropped')
 
@@ -40,7 +44,7 @@ for ext in included_extenstions:
 
 
 for i, image_file in enumerate(image_list_indir):
-#   i=10
+#   i=100
     image_file=image_list_indir[i]
     
     label=df.loc[df['Filename'] == os.path.basename(image_file)]
@@ -54,12 +58,35 @@ for i, image_file in enumerate(image_list_indir):
     edges1 = feature.canny(gray, sigma=2)
     edges2 = morphology.binary_dilation(edges1,morphology.disk(5))
     
-    label_im, nb_labels = ndimage.label(edges2)
-        
-    sizes = ndimage.sum(edges2, label_im, range(nb_labels + 1))
+    label_im=measure.label(edges2)
+    props = measure.regionprops(label_im)
+    
+    areas = [prop.area for prop in props]
+    
+    #bboxes = [prop.bbox  for prop in props]
+    
+    prop_large = props[np.argmax(areas)]
+    
+    o = np.round(prop_large.centroid ).astype('uint8')
+    max_r = np.min((np.min(gray.shape-o),np.min(o)))
+    r = np.ceil(np.max(prop_large.bbox[2:4])/2).astype('uint8')
+    r = np.min((r,max_r))
+    
+    im_cropped = im[o[0]-r:o[0]+r, o[1]-r:o[1]+r,:]
 
-    slice_x, slice_y = ndimage.find_objects(label_im==np.argmax(sizes))[0]
-    im_cropped = im[slice_x, slice_y]
+    
+#    label_im, nb_labels = ndimage.label(edges2)
+#    
+#    props = regionprops(label_img)
+#        
+#    sizes = ndimage.sum(edges2, label_im, range(nb_labels + 1))
+#
+#    slice_x, slice_y = ndimage.find_objects(label_im==np.argmax(sizes))[0]
+#    
+    # create square slice
+
+    
+    #im_cropped = im[slice_x, slice_y]
     
     #crop_file=os.path.join(output_dir,wbc_type+'_'+str(i_detected)+'_'+str(alpha)+'.png')
 #    crop_file=os.path.join(cropDir,os.path.basename(image_file))
