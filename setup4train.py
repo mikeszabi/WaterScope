@@ -30,6 +30,10 @@ import os
 #import numpy as np
 
 
+user='picturio'
+data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
+#data_dir=r'd:\DATA\WaterScope'
+
 def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
 
@@ -38,7 +42,6 @@ trainRatio=0.75
 
 included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
 
-data_dir=r'd:\DATA\WaterScope'
 image_dir=os.path.join(data_dir,'cropped')
 train_dir=os.path.join(data_dir,'Training')
 train_image_list_file=os.path.join(train_dir,'images_train.csv')

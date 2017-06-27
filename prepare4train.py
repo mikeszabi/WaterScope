@@ -31,7 +31,7 @@ from PIL import Image
 
 user='picturio'
 output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-output_base_dir=r'd:\DATA\WaterScope'
+#output_base_dir=r'd:\DATA\WaterScope'
 
 
 # Config matplotlib for inline plotting
@@ -39,7 +39,7 @@ output_base_dir=r'd:\DATA\WaterScope'
 imgSize=32
 nCh=3
 numFeature = imgSize * imgSize * 3
-num_classes  = 6
+num_classes  = 28
 
 label_base=np.zeros(num_classes)
 
@@ -186,5 +186,5 @@ saveTestImages(test_image_list_file,train_dir)
 print ('Done.')
 
 # enrich!
-train_map=balanceMap(train_map_o,min_count=600, max_count=3000)
-test_map=balanceMap(test_map_o,min_count=200, max_count=1000)
+train_map=balanceMap(train_map_o,min_count=500, max_count=1500)
+test_map=balanceMap(test_map_o,min_count=200, max_count=500)

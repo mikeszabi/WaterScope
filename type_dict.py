@@ -11,7 +11,7 @@ import csv
 
 user='picturio'
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-data_dir=r'd:\DATA\WaterScope'
+#data_dir=r'd:\DATA\WaterScope'
 
 
 db_file=os.path.join(data_dir,'Database.csv')

@@ -9,7 +9,6 @@ Created on Fri Dec 23 21:42:51 2016
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import cfg
 
 #from cntk.device import gpu, set_default_device
 from cntk import cross_entropy_with_softmax, classification_error, relu, input_variable, softmax, element_times
@@ -22,7 +21,7 @@ from cntk.logging import log_number_of_parameters, ProgressPrinter
 
 user='picturio'
 output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-output_base_dir=r'd:\DATA\WaterScope'
+#output_base_dir=r'd:\DATA\WaterScope'
 
 train_dir=os.path.join(output_base_dir,'Training')
 
@@ -39,7 +38,6 @@ test_map=os.path.join(train_dir,'test_map.txt')
 data_mean_file=os.path.join(train_dir,'data_mean.xml')
 
 # model dimensions
-param=cfg.param()
 
 image_height = 32
 image_width  = 32
@@ -49,13 +47,13 @@ num_classes  = 28
 
 def create_basic_model(input, out_dims):
     
-    convolutional_layer_1  = Convolution((5,5), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
+    convolutional_layer_1  = Convolution((3,3), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
     pooling_layer_1  = MaxPooling((2,2), strides=(1,1))(convolutional_layer_1 )
 
-#    convolutional_layer_2 = Convolution((9,9), 16, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
-#    pooling_layer_2 = MaxPooling((3,3), strides=(2,2))(convolutional_layer_2)
+    convolutional_layer_2 = Convolution((5,5), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
+    pooling_layer_2 = MaxPooling((3,3), strides=(2,2))(convolutional_layer_2)
 
-    convolutional_layer_3 = Convolution((9,9), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
+    convolutional_layer_3 = Convolution((7,7), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
     pooling_layer_3 = MaxPooling((4,4), strides=(2,2))(convolutional_layer_3)
 #    
     fully_connected_layer  = Dense(256, init=glorot_uniform())(pooling_layer_3)
@@ -130,8 +128,8 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
     pe = classification_error(z, label_var)
 
     # training config
-    epoch_size     = 9000
-    minibatch_size = 16
+    epoch_size     = 18000
+    minibatch_size = 64
 
     # Set training parameters
     lr_per_minibatch       = learning_rate_schedule([0.01]*10 + [0.003]*10 + [0.001],  UnitType.minibatch, epoch_size)
@@ -179,8 +177,8 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
     #
     # Evaluation action
     #
-    epoch_size     = 3000
-    minibatch_size = 16
+    epoch_size     = 6000
+    minibatch_size = 32
 
     # process minibatches and evaluate the model
     metric_numer    = 0
@@ -242,7 +240,7 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
 reader_train = create_reader(train_map, data_mean_file, True)
 reader_test  = create_reader(test_map, data_mean_file, False)
 
-pred = train_and_evaluate(reader_train, reader_test, max_epochs=50,
+pred = train_and_evaluate(reader_train, reader_test, max_epochs=1000,
                           model_func=create_basic_model)
 #pred_batch= train_and_evaluate(reader_train, reader_test, max_epochs=10, model_func=create_basic_model_with_batch_normalization)
 
