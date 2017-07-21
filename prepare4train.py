@@ -39,7 +39,7 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 imgSize=32
 nCh=3
 numFeature = imgSize * imgSize * 3
-num_classes  = 28
+num_classes  = 32
 
 label_base=np.zeros(num_classes)
 
@@ -187,4 +187,4 @@ print ('Done.')
 
 # enrich!
 train_map=balanceMap(train_map_o,min_count=500, max_count=1500)
-test_map=balanceMap(test_map_o,min_count=200, max_count=500)
+test_map=balanceMap(test_map_o,min_count=200, max_count=600)

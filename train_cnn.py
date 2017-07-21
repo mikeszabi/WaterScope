@@ -42,7 +42,7 @@ data_mean_file=os.path.join(train_dir,'data_mean.xml')
 image_height = 32
 image_width  = 32
 num_channels = 3
-num_classes  = 28
+num_classes  = 32
 
 
 def create_basic_model(input, out_dims):

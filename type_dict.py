@@ -11,19 +11,20 @@ import csv
 
 user='picturio'
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
+image_dir=os.path.join(data_dir,'original_20170710')
 #data_dir=r'd:\DATA\WaterScope'
 
 
-db_file=os.path.join(data_dir,'Database.csv')
-typedict_file=os.path.join(data_dir,'TypeDict.csv')
+db_file=os.path.join(image_dir,'Database.csv')
+typedict_file=os.path.join(image_dir,'TypeDict.csv')
 
 df = pd.read_csv(db_file,delimiter=';')
 
-types=pd.Series(df['Class name'])
+types=df['Class name'].sort_values(ascending=False)
 
 type_dict={}
-for i, itype in enumerate(types.unique()):
-    type_dict[itype]=i
+for i, itype in enumerate(types.value_counts().items()):
+    type_dict[itype[0]]=i
     
 out = open(typedict_file, 'wt')
 w = csv.DictWriter(out, delimiter=';', fieldnames=['type','label'])

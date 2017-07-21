@@ -42,11 +42,13 @@ trainRatio=0.75
 
 included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
 
-image_dir=os.path.join(data_dir,'cropped')
+image_dir=os.path.join(data_dir,'cropped_highclass_20170710')
+orig_dir=os.path.join(data_dir,'original_20170710')
 train_dir=os.path.join(data_dir,'Training')
 train_image_list_file=os.path.join(train_dir,'images_train.csv')
 test_image_list_file=os.path.join(train_dir,'images_test.csv')
-typedict_file=os.path.join(data_dir,'TypeDict.csv')
+typedict_file=os.path.join(orig_dir,'TypeDict.csv')
+typedict_2_file=os.path.join(image_dir,'TypeDict_2.csv')
 
 
 #db_file=os.path.join(data_dir,'Database.csv')
@@ -81,6 +83,39 @@ for i, image_file in enumerate(image_list_indir):
 
 
 sampleCount=Counter(samples.values())
+
+# remove samples with low counts
+samples = {k: v for k, v in samples.items() if sampleCount[v]>10*4}
+
+sampleCount=Counter(samples.values())
+
+print('Number of classes : '+str(len(sampleCount)))
+
+type_dict_2 = {}
+for i,ind in enumerate(sampleCount.keys()):
+    type_dict_2[keysWithValue(type_dict,ind)[0]]=i
+    
+
+out = open(typedict_2_file, 'wt')
+w = csv.DictWriter(out, delimiter=';', fieldnames=['type','label'])
+w.writeheader()
+for key, value in type_dict_2.items():
+    w.writerow({'type' : key, 'label' : value})
+out.close()
+
+
+samples_old=samples
+samples={}
+
+for k,v in samples_old.items():
+    file_name=os.path.basename(k)
+    category=file_name.split('__')[0]
+    samples[k]=type_dict_2[category]
+
+
+sampleCount=Counter(samples.values())
+
+print('Number of classes : '+str(len(sampleCount)))
 
 # CREATE TEST AND TRAIN LIST USING RANDOM SPLIT
 i=0
