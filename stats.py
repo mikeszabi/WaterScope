@@ -15,6 +15,18 @@ import os
 import numpy as np
 
 
+user='picturio'
+data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
+image_dir=os.path.join(data_dir,'merged export')
+#data_dir=r'd:\DATA\WaterScope'
+
+
+db_file=os.path.join(image_dir,'Database.csv')
+typedict_file=os.path.join(image_dir,'TypeDict.csv')
+
+df = pd.read_csv(db_file,delimiter=';')
+
+
 df_high=df[df['Class quality'] == 'highclass']
 classes=df_high['Class name'].value_counts()
 

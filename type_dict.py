@@ -11,7 +11,7 @@ import csv
 
 user='picturio'
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-image_dir=os.path.join(data_dir,'original_20170710')
+image_dir=os.path.join(data_dir,'merged export')
 #data_dir=r'd:\DATA\WaterScope'
 
 

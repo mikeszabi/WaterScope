@@ -42,22 +42,24 @@ trainRatio=0.75
 
 included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
 
+orig_image_dir=os.path.join(data_dir,'merged export')
+
 image_dir=os.path.join(data_dir,'cropped_highclass_20170710')
-orig_dir=os.path.join(data_dir,'original_20170710')
+orig_dir=os.path.join(data_dir,'merged export')
 train_dir=os.path.join(data_dir,'Training')
 train_image_list_file=os.path.join(train_dir,'images_train.csv')
 test_image_list_file=os.path.join(train_dir,'images_test.csv')
-typedict_file=os.path.join(orig_dir,'TypeDict.csv')
+#typedict_file=os.path.join(orig_dir,'TypeDict.csv')
 typedict_2_file=os.path.join(image_dir,'TypeDict_2.csv')
-
+typedict_3_file=os.path.join(image_dir,'TypeDict_3.csv')
 
 #db_file=os.path.join(data_dir,'Database.csv')
 
 # read type dict
-type_dict={}
-reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
-for row in reader:
-    type_dict[row['type']]=row['label']
+#type_dict={}
+#reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
+#for row in reader:
+#    type_dict[row['type']]=row['label']
 
 image_list_indir = []
 for ext in included_extenstions:
@@ -70,7 +72,7 @@ for ext in included_extenstions:
 #
 #print(types.value_counts())
 
-samples = {}
+samples_all = {}
 for i, image_file in enumerate(image_list_indir):
 #    i=10
     image_file=image_list_indir[i]
@@ -79,21 +81,22 @@ for i, image_file in enumerate(image_list_indir):
     #label=df.loc[df['Filename'] == os.path.basename(image_file)]
     #category=label['Class name'].values[0]
     category=file_name.split('__')[0]
-    samples[image_file]=type_dict[category]
+    samples_all[image_file]=category
 
 
-sampleCount=Counter(samples.values())
+sampleCount=Counter(samples_all.values())
 
 # remove samples with low counts
-samples = {k: v for k, v in samples.items() if sampleCount[v]>10*4}
+samples_enough = {k: v for k, v in samples_all.items() if sampleCount[v]>20*4}
 
-sampleCount=Counter(samples.values())
+categories=sorted(Counter(samples_enough.values()))
 
-print('Number of classes : '+str(len(sampleCount)))
+print('Number of classes : '+str(len(categories)))
 
+# categories in alphabetical order 
 type_dict_2 = {}
-for i,ind in enumerate(sampleCount.keys()):
-    type_dict_2[keysWithValue(type_dict,ind)[0]]=i
+for label, type in enumerate(categories):
+    type_dict_2[type]=label
     
 
 out = open(typedict_2_file, 'wt')
@@ -103,19 +106,60 @@ for key, value in type_dict_2.items():
     w.writerow({'type' : key, 'label' : value})
 out.close()
 
-
-samples_old=samples
+# new labels
 samples={}
 
-for k,v in samples_old.items():
+for k,v in samples_enough.items():
     file_name=os.path.basename(k)
-    category=file_name.split('__')[0]
-    samples[k]=type_dict_2[category]
+    samples[k]=type_dict_2[v]
 
 
 sampleCount=Counter(samples.values())
 
 print('Number of classes : '+str(len(sampleCount)))
+
+
+# add group aliases
+aliases_file=os.path.join(orig_image_dir,'aliases.txt')
+aliases={}
+reader =csv.DictReader(open(aliases_file, 'rt'), delimiter=':')
+for row in reader:
+    aliases[row['alias']]=row['classes']
+    
+types_3={}
+for cat in type_dict_2.keys():
+    found=False
+    for alias,group in aliases.items():
+        for tp in group.split(','):
+            if cat==tp:
+                types_3[cat]=alias
+                found=True
+                break
+        if found:
+            break
+    if not found:
+        types_3[cat]=cat
+              
+type_dict_3={}
+for i,tp in enumerate(sorted(set(types_3.values()), key=lambda v: v.upper())):
+    type_dict_3[tp]=i
+               
+out = open(typedict_3_file, 'wt')
+w = csv.DictWriter(out, delimiter=';', fieldnames=['type','label'])
+w.writeheader()
+for key, value in type_dict_3.items():
+    w.writerow({'type' : key, 'label' : value})
+out.close()
+ 
+samples={}
+
+for k,v in samples_enough.items():
+    file_name=os.path.basename(k)
+    samples[k]=type_dict_3[types_3[v]]
+
+sampleCount=Counter(samples.values())
+
+print('Number of classes : '+str(len(sampleCount)))        
 
 # CREATE TEST AND TRAIN LIST USING RANDOM SPLIT
 i=0

@@ -39,9 +39,9 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 imgSize=32
 nCh=3
 numFeature = imgSize * imgSize * 3
-num_classes  = 32
-
-label_base=np.zeros(num_classes)
+#num_classes  = 33
+#
+#label_base=np.zeros(num_classes)
 
 # Paths for saving the text files
 train_dir=os.path.join(output_base_dir,'Training')
@@ -186,5 +186,5 @@ saveTestImages(test_image_list_file,train_dir)
 print ('Done.')
 
 # enrich!
-train_map=balanceMap(train_map_o,min_count=500, max_count=1500)
-test_map=balanceMap(test_map_o,min_count=200, max_count=600)
+train_map=balanceMap(train_map_o,min_count=200, max_count=1000)
+test_map=balanceMap(test_map_o,min_count=50, max_count=250)

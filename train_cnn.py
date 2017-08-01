@@ -28,9 +28,6 @@ train_dir=os.path.join(output_base_dir,'Training')
 model_file=os.path.join(train_dir,'cnn_model.dnn')
 model_temp_file=os.path.join(train_dir,'cnn_model_temp.dnn')
 
-train_image_list_file=os.path.join(train_dir,'images_train.csv')
-test_image_list_file=os.path.join(train_dir,'images_test.csv')
-
 train_map=os.path.join(train_dir,'train_map.txt')
 test_map=os.path.join(train_dir,'test_map.txt')
 # GET train and test map from prepare4train
@@ -42,7 +39,7 @@ data_mean_file=os.path.join(train_dir,'data_mean.xml')
 image_height = 32
 image_width  = 32
 num_channels = 3
-num_classes  = 32
+num_classes  = 15
 
 
 def create_basic_model(input, out_dims):
@@ -51,11 +48,11 @@ def create_basic_model(input, out_dims):
     pooling_layer_1  = MaxPooling((2,2), strides=(1,1))(convolutional_layer_1 )
 
     convolutional_layer_2 = Convolution((5,5), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
-    pooling_layer_2 = MaxPooling((3,3), strides=(2,2))(convolutional_layer_2)
+    pooling_layer_2 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_2)
 
-    convolutional_layer_3 = Convolution((7,7), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
-    pooling_layer_3 = MaxPooling((4,4), strides=(2,2))(convolutional_layer_3)
-#    
+    convolutional_layer_3 = Convolution((9,9), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
+    pooling_layer_3 = MaxPooling((3,3), strides=(2,2))(convolutional_layer_3)
+##    
     fully_connected_layer  = Dense(256, init=glorot_uniform())(pooling_layer_3)
     dropout_layer = Dropout(0.5)(fully_connected_layer)
 
@@ -68,13 +65,13 @@ def create_advanced_model(input, out_dims):
     with default_options(activation=relu):
         model = Sequential([
             For(range(2), lambda i: [  # lambda with one parameter
-                Convolution((3,3), [16,32][i], pad=True),  # depth depends on i
-                #Convolution((5,5), [16,16][i], pad=True),
-                Convolution((9,9), [16,32][i], pad=True),            
+                Convolution((3,3), [32,64][i], pad=True),  # depth depends on i
+                Convolution((5,5), [32,64][i], pad=True),
+                Convolution((9,9), [32,64][i], pad=True),            
                 MaxPooling((3,3), strides=(2,2))
             ]),
             For(range(2), lambda : [   # lambda without parameter
-                Dense(128),
+                Dense(512),
                 Dropout(0.5)
             ]),
             Dense(out_dims, activation=None)
@@ -128,7 +125,7 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
     pe = classification_error(z, label_var)
 
     # training config
-    epoch_size     = 18000
+    epoch_size     = 20000
     minibatch_size = 64
 
     # Set training parameters
@@ -177,7 +174,7 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
     #
     # Evaluation action
     #
-    epoch_size     = 6000
+    epoch_size     = 6600
     minibatch_size = 32
 
     # process minibatches and evaluate the model
@@ -240,8 +237,8 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
 reader_train = create_reader(train_map, data_mean_file, True)
 reader_test  = create_reader(test_map, data_mean_file, False)
 
-pred = train_and_evaluate(reader_train, reader_test, max_epochs=1000,
-                          model_func=create_basic_model)
+pred = train_and_evaluate(reader_train, reader_test, max_epochs=1500,
+                          model_func=create_advanced_model)
 #pred_batch= train_and_evaluate(reader_train, reader_test, max_epochs=10, model_func=create_basic_model_with_batch_normalization)
 
 pred.save_model(model_file)
