@@ -25,8 +25,8 @@ import numpy as np
 
 def crop(img,pad_rate=0.25,save_file='',category=''):
 
-#    img_rgb=img.convert('RGB')     # if png
-    img_rgb=img
+    img_rgb=img.convert('RGB')     # if png
+#   img_rgb=img
     
     im = np.asarray(img_rgb,dtype=np.uint8)
     

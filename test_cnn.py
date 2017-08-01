@@ -10,7 +10,6 @@ import warnings
 import csv
 import pandas as pd
 import os
-from collections import OrderedDict
 
 import numpy as np
 import skimage.io as io
@@ -22,18 +21,18 @@ from cntk import load_model
 
 user='picturio'
 imgSize=32
-num_classes  = 33
+num_classes  = 15
 
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 image_dir=os.path.join(data_dir,'cropped_highclass_20170710')
 
-typedict_2_file=os.path.join(image_dir,'TypeDict_2.csv')
-type_dict_2={}
-reader =csv.DictReader(open(typedict_2_file, 'rt'), delimiter=';')
+typedict_file=os.path.join(image_dir,'TypeDict_3.csv')
+type_dict={}
+reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
 for row in reader:
-    type_dict_2[row['type']]=row['label']
+    type_dict[row['type']]=row['label']
 
-sorted_classes= [i[0] for i in sorted(type_dict_2.items(), key=lambda x:x[0])]
+sorted_classes= [i[0] for i in sorted(type_dict.items(), key=lambda x:x[0].upper())]
 
 
 user='picturio'
@@ -91,8 +90,8 @@ for i, im_name in enumerate(df['image']):
     contingency_table[predicted_label,label]+=1
     if predicted_label  != label:
         mis_item=[os.path.basename(im_name),
-        keysWithValue(type_dict_2,str(predicted_label)),
-        keysWithValue(type_dict_2,str(label))]
+        keysWithValue(type_dict,str(predicted_label)),
+        keysWithValue(type_dict,str(label))]
         misclassified.append(mis_item)
 #    print(df['wbc'][i])
 #    print(result)
