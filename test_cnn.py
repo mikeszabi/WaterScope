@@ -21,7 +21,7 @@ from cntk import load_model
 
 user='picturio'
 imgSize=32
-num_classes  = 15
+num_classes  = 17
 
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 image_dir=os.path.join(data_dir,'cropped_highclass_20170710')
