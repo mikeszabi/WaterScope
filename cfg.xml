@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <folders>
+        <root>./</root>
+    </folders>
+    <processing>       
+	<delete>false</delete>
+    </processing>
+</config>
+
