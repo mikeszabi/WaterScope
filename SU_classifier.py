@@ -15,8 +15,8 @@ import logging
 import xml.etree.ElementTree as ET
 
 # Logging setup
-log_file='progress.log'
-logging.basicConfig(filename=log_file,level=logging.DEBUG)
+#log_file='progress.log'
+#logging.basicConfig(filename=log_file,level=logging.DEBUG)
 
 class SU_gui(tk.Frame):
     running=True
@@ -58,20 +58,35 @@ class SU_gui(tk.Frame):
 
 if __name__ == "__main__":
     
-    tree = ET.parse('cfg.xml')
     
-    logging.info('STARTING')
+#    logging.info('STARTING')
 
+#   creating gui
     root = tk.Tk()
     su=SU_gui(root)
     su.pack(fill="both", expand=True)
     root.mainloop()
     
+    # reading parameters
+    tree = ET.parse('cfg.xml')
     textelem = tree.find('folders/root') # findall if many
     textelem.text
     textelem = tree.find('processing/delete')
     
-    logging.info('FINISHING')
-    logging.shutdown()
-    os.remove(log_file)
+#    logging.info('FINISHING')
+#    logging.shutdown()
+#    os.remove(log_file)
 #    sys.exit(1)
+
+
+# ToDo: get date
+# Check folders
+# If there is a folder to process - do classification
+# create file structure
+# copy images to folders
+
+# map file classified taxonname - taxonname
+
+# classification class - input: image file name; output: class name (pct)
+# stats class
+# file manager class
