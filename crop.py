@@ -32,7 +32,8 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     
     gray=rgb2gray(im)
     
-    edges1 = feature.canny(gray, sigma=2)
+    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.15, high_threshold=0.25)
+    #edges1 = feature.canny(gray, sigma=2)
     edges2 = morphology.binary_dilation(edges1,morphology.disk(5))
     
     label_im=measure.label(edges2)

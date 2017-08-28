@@ -21,12 +21,13 @@ from cntk import load_model
 
 user='picturio'
 imgSize=32
-num_classes  = 17
+num_classes  = 16
 
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-image_dir=os.path.join(data_dir,'cropped_highclass_20170710')
+db_image_dir=os.path.join(data_dir,'db_images')
+proc_image_dir=os.path.join(data_dir,'processed_images')
 
-typedict_file=os.path.join(image_dir,'TypeDict_3.csv')
+typedict_file=os.path.join(db_image_dir,'TypeDict_3.csv')
 type_dict={}
 reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
 for row in reader:
@@ -42,7 +43,7 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 train_dir=os.path.join(output_base_dir,'Training')
 
 model_file=os.path.join(train_dir,'cnn_model.dnn')
-image_dir=os.path.join(output_base_dir,'cropped_highclass_20170710')
+
 train_dir=os.path.join(output_base_dir,'Training')
 image_list_file=os.path.join(train_dir,'images_test.csv')
 model_file=os.path.join(train_dir,'cnn_model.dnn')
@@ -64,7 +65,7 @@ contingency_table=np.zeros((num_classes,num_classes))
 misclassified=[]
 for i, im_name in enumerate(df['image']):
 #    i=200
-    image_file=os.path.join(image_dir,im_name)    
+    image_file=os.path.join(proc_image_dir,im_name)    
 #    image_file=r'C:\Users\SzMike\OneDrive\WBC\DATA\Training\Train\ne_50.png'
 
 #    wbc_type='0'
@@ -100,7 +101,7 @@ for i, im_name in enumerate(df['image']):
 #    
 a=[i[1][0] for i in misclassified]
 for misc in misclassified:
-    image_file=os.path.join(image_dir,misc[0])    
+    image_file=os.path.join(proc_image_dir,misc[0])    
     save_file=os.path.join(data_dir,'misc',misc[1][0]+'___'+misc[0])
     im=io.imread(image_file)
     io.imsave(save_file,im)

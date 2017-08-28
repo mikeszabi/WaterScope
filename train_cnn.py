@@ -39,7 +39,7 @@ data_mean_file=os.path.join(train_dir,'data_mean.xml')
 image_height = 32
 image_width  = 32
 num_channels = 3
-num_classes  = 17
+num_classes  = 16
 
 
 def create_basic_model(input, out_dims):
@@ -237,8 +237,8 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
 reader_train = create_reader(train_map, data_mean_file, True)
 reader_test  = create_reader(test_map, data_mean_file, False)
 
-pred = train_and_evaluate(reader_train, reader_test, max_epochs=1500,
-                          model_func=create_advanced_model)
+pred = train_and_evaluate(reader_train, reader_test, max_epochs=1200,
+                          model_func=create_basic_model)
 #pred_batch= train_and_evaluate(reader_train, reader_test, max_epochs=10, model_func=create_basic_model_with_batch_normalization)
 
 pred.save_model(model_file)

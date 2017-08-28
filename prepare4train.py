@@ -26,6 +26,7 @@ io.use_plugin('pil') # Use only the capability of PIL
 from skimage.transform import resize
 from skimage import img_as_ubyte
 from PIL import Image
+from cfg import *
 
 #%matplotlib inline
 
@@ -43,8 +44,6 @@ numFeature = imgSize * imgSize * 3
 #
 #label_base=np.zeros(num_classes)
 
-# Paths for saving the text files
-train_dir=os.path.join(output_base_dir,'Training')
 
 train_image_list_file=os.path.join(train_dir,'images_train.csv')
 test_image_list_file=os.path.join(train_dir,'images_test.csv')

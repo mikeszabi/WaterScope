@@ -17,18 +17,18 @@ import numpy as np
 
 user='picturio'
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-image_dir=os.path.join(data_dir,'merged export')
+image_dir=os.path.join(data_dir,'db_images')
 #data_dir=r'd:\DATA\WaterScope'
-
+%matplotlib qt5
 
 db_file=os.path.join(image_dir,'Database.csv')
-typedict_file=os.path.join(image_dir,'TypeDict.csv')
+#typedict_file=os.path.join(image_dir,'TypeDict.csv')
 
 df = pd.read_csv(db_file,delimiter=';')
 
 
-df_high=df[df['Class quality'] == 'highclass']
-classes=df_high['Class name'].value_counts()
+#df_high=df[df['Class quality'] == 'highclass']
+classes=df['Class name'].value_counts()
 
 
 fig = plt.figure(1, figsize=(72., 40.))
@@ -38,8 +38,8 @@ grid = ImageGrid(fig, 111,  # similar to subplot(111)
                  )
 samp=[]
 for i, cl in enumerate(classes.keys()):
-    df_high_cl=df[df['Class name'] == cl]
-    samp.append(df_high_cl.sample(n=1))
+    df_cl=df[df['Class name'] == cl]
+    samp.append(df_cl.sample(n=1))
     
     img = Image.open(os.path.join(image_dir,samp[i].iloc[0]['Filename']))
     img.thumbnail((100,100))
