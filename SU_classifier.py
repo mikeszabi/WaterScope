@@ -7,10 +7,12 @@ Created on Mon Aug 28 19:59:11 2017
 
 import tkinter as tk
 
-import sys
-import os
-import logging
+#import sys
+#import os
+#import logging
 
+import time
+#print (time.strftime("%d/%m/%Y"))
 
 import xml.etree.ElementTree as ET
 
@@ -47,7 +49,7 @@ class SU_gui(tk.Frame):
         
     def start(self):
         self.running=True
-        self.text.insert(tk.END, 'kulipintyó\n')
+        self.text.insert(tk.END, time.strftime("%I:%M:%S")+' : '+'kulipintyó\n')
         self.text.see(tk.END)
 
     def stop(self):
