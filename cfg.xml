@@ -9,8 +9,7 @@
     <files>
         <control>control.log</control>
         <settings>settings-settings.xml</settings>
-        <measure_details>MeasureDetails*.xml</measure_details>
-        <measure_sum>MeasureDetails*.xml</measure_sum>
+        <measure>(Measure).*(.xml)</measure>
     </files>
     <processing>       
     	 <delete_files>false</delete_files>
