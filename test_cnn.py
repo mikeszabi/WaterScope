@@ -103,6 +103,7 @@ a=[i[1][0] for i in misclassified]
 for misc in misclassified:
     image_file=os.path.join(proc_image_dir,misc[0])    
     save_file=os.path.join(data_dir,'misc',misc[1][0]+'___'+misc[0])
+    # "predicted label"___"original label"
     im=io.imread(image_file)
     io.imsave(save_file,im)
     print(misc)

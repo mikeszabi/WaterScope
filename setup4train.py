@@ -24,34 +24,33 @@ from collections import Counter
 import random
 import math
 import os
-
+from cfg import *
 
 #import pandas as pd
 #import numpy as np
 
 
-user='picturio'
-data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-#data_dir=r'd:\DATA\WaterScope'
+#user='picturio'
+#data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
+##data_dir=r'd:\DATA\WaterScope'
 
 def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
 
-trainRatio=0.75
+#trainRatio=0.75
 
 
-included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
-
-orig_image_dir=os.path.join(data_dir,'merged export')
-
-image_dir=os.path.join(data_dir,'cropped_highclass_20170710')
-orig_dir=os.path.join(data_dir,'merged export')
-train_dir=os.path.join(data_dir,'Training')
-train_image_list_file=os.path.join(train_dir,'images_train.csv')
-test_image_list_file=os.path.join(train_dir,'images_test.csv')
-#typedict_file=os.path.join(orig_dir,'TypeDict.csv')
-typedict_2_file=os.path.join(image_dir,'TypeDict_2.csv')
-typedict_3_file=os.path.join(image_dir,'TypeDict_3.csv')
+#included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
+#
+#db_image_dir=os.path.join(data_dir,'db_images')
+#proc_image_dir=os.path.join(data_dir,'cropped_highclass_20170823')
+#
+#train_dir=os.path.join(data_dir,'Training')
+#train_image_list_file=os.path.join(train_dir,'images_train.csv')
+#test_image_list_file=os.path.join(train_dir,'images_test.csv')
+##typedict_file=os.path.join(orig_dir,'TypeDict.csv')
+#typedict_2_file=os.path.join(db_image_dir,'TypeDict_2.csv')
+#typedict_3_file=os.path.join(db_image_dir,'TypeDict_3.csv')
 
 #db_file=os.path.join(data_dir,'Database.csv')
 
@@ -63,7 +62,7 @@ typedict_3_file=os.path.join(image_dir,'TypeDict_3.csv')
 
 image_list_indir = []
 for ext in included_extenstions:
-    image_list_indir.extend(glob.glob(os.path.join(image_dir, ext)))
+    image_list_indir.extend(glob.glob(os.path.join(proc_image_dir, ext)))
 
 
 #df = pd.read_csv(db_file,delimiter=';')
@@ -120,7 +119,6 @@ print('Number of classes : '+str(len(sampleCount)))
 
 
 # add group aliases
-aliases_file=os.path.join(orig_image_dir,'aliases.txt')
 aliases={}
 reader =csv.DictReader(open(aliases_file, 'rt'), delimiter=':')
 for row in reader:
