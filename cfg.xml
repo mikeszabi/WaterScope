@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <folders>
-        <root>C:\work</root>
+        <root>c:\Users\szmike\OneDrive\WaterScope\work</root>
+        <measurement>Measurement</measurement>
+        <classification>SUClassification</classification>
+        <database>Database</database>
     </folders>
+    <files>
+        <control>control.log</control>
+        <settings>settings-settings.xml</settings>
+        <measure_details>MeasureDetails*.xml</measure_details>
+        <measure_sum>MeasureDetails*.xml</measure_sum>
+    </files>
     <processing>       
-	<delete>false</delete>
+    	 <delete_files>false</delete_files>
     </processing>
 </config>
 

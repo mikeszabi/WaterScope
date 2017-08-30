@@ -26,3 +26,13 @@ def imagelist_in_depth(image_dir,level=1):
         for ext in included_extenstions:
             image_list_indir.extend(glob.glob(os.path.join(root, ext)))
     return image_list_indir
+
+def check_folder(folder='.',create=True):
+    if os.path.exists(folder):
+        return True
+    else:
+        if create:
+            os.makedirs(folder)
+            return True
+        else:
+            return False

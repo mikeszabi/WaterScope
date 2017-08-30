@@ -6,57 +6,101 @@ Created on Mon Aug 28 19:59:11 2017
 """
 
 import tkinter as tk
+import time
+import os
+import xml.etree.ElementTree as ET
+from file_helper import *
 
 #import sys
-#import os
 #import logging
-
-import time
-#print (time.strftime("%d/%m/%Y"))
-
-import xml.etree.ElementTree as ET
 
 # Logging setup
 #log_file='progress.log'
 #logging.basicConfig(filename=log_file,level=logging.DEBUG)
 
-class SU_gui(tk.Frame):
+class params:
+    
+    def __init__(self):
+        # reading parameters
+        tree = ET.parse('cfg.xml')
+        self.dirs={}
+        self.files={}
+        self.dirs['root'] = tree.find('folders/root').text 
+        self.dirs['measurement'] = tree.find('folders/measurement').text 
+        self.dirs['classification'] = tree.find('folders/classification').text 
+        self.files['control'] = tree.find('files/control').text 
+                
+
+class Application(tk.Frame):
     running=True
-    #text=None
+    cur_folder='.'
        
-    def __init__(self, master):
-        tk.Frame.__init__(self, master, background="green")
+    def __init__(self, master=None):
+        self.params=params()
         
+        tk.Frame.__init__(self, master, background="green")
+        self.pack(fill="both", expand=True)
+        self.createWidgets()
+
+     
+    def createWidgets(self)   :        
+        # define widgets
         scrollbar = tk.Scrollbar(self)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.text=tk.Text(self,height=10,width=50, wrap=tk.WORD, yscrollcommand=scrollbar.set)
-        self.text.pack(expand=True, fill='both')
+        self.text.pack(expand=True, fill='both', side=tk.BOTTOM)
         scrollbar.config(command=self.text.yview)
-
 
         separator = tk.Frame(height=2, bd=1, relief=tk.SUNKEN)
         separator.pack(fill=tk.X, padx=5, pady=5)
+        
+        self.dir_label = tk.Label(self, text='root'+' : '+self.params.dirs['root'])
+        self.dir_label.pack(fill=tk.X, side=tk.BOTTOM)
+        
+        self.date_entry = tk.Entry(self, bg='yellow')
+        self.date_entry.pack(fill=tk.X, side=tk.BOTTOM)
+        self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
+        
         start_button = tk.Button(separator, text="START", command=self.start, width=10)
-        #start_button.grid(row=0, column=0, sticky=tk.W)
         start_button.pack(side=tk.LEFT)
+        
         stop_button = tk.Button(separator, text="STOP", command=self.stop, width=10)
         stop_button.pack(side=tk.LEFT)
-        #stop_button.grid(row=1, column=0, sticky=tk.W)
         
+        clear_button = tk.Button(separator, text="CLEAR", command=self.clear, width=10)
+        clear_button.pack(side=tk.LEFT)
         
-        
-
+        self.onUpdate()
         
     def start(self):
         self.running=True
-        self.text.insert(tk.END, time.strftime("%I:%M:%S")+' : '+'kulipintyó\n')
+        self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'start processing\n')
         self.text.see(tk.END)
+        self.onUpdate()
 
     def stop(self):
         self.running=False
-        self.text.delete('1.0', tk.END)
+        self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'stop processing\n')
+        self.text.see(tk.END)
         
-
+    def clear(self):
+        self.text.delete('1.0', tk.END)
+        self.date_entry.delete(0, tk.END)
+        self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
+        
+    def onUpdate(self):
+        # ToDo: update date entry with clear on new days
+        date_str=self.date_entry.get().replace('/','')
+        self.cur_process_folder=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'],date_str)
+        if check_folder(folder=self.cur_process_folder,create=False):
+            self.text.insert(tk.END, 'searching in : '+self.cur_process_folder+'\n')
+            self.text.see(tk.END)
+        else:
+            self.text.insert(tk.END, 'non existent : '+self.cur_process_folder+'\n')
+            self.text.see(tk.END)
+             
+        if self.running:
+            self.after(1000,self.onUpdate)
 
 if __name__ == "__main__":
     
@@ -65,15 +109,11 @@ if __name__ == "__main__":
 
 #   creating gui
     root = tk.Tk()
-    su=SU_gui(root)
-    su.pack(fill="both", expand=True)
+    app=Application(master=root)
     root.mainloop()
+
     
-    # reading parameters
-    tree = ET.parse('cfg.xml')
-    textelem = tree.find('folders/root') # findall if many
-    textelem.text
-    textelem = tree.find('processing/delete')
+    
     
 #    logging.info('FINISHING')
 #    logging.shutdown()
