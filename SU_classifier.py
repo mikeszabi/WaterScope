@@ -8,9 +8,9 @@ Created on Mon Aug 28 19:59:11 2017
 import tkinter as tk
 import time
 import os
-import sys
 import xml.etree.ElementTree as ET
-from file_helper import *
+from file_helper import images2process_list_in_depth
+from classifications import create_image, cnn_classification
 
 #import sys
 #import logging
@@ -31,7 +31,9 @@ class params:
         self.dirs['classification'] = tree.find('folders/classification').text 
         self.files['control'] = tree.find('files/control').text 
         self.files['measure'] = tree.find('files/measure').text
-                
+        self.files['model'] = os.path.join(tree.find('folders/model').text,
+                                          tree.find('files/model').text)
+                                 
 
 class Application(tk.Frame):
     running=True
@@ -39,6 +41,9 @@ class Application(tk.Frame):
        
     def __init__(self, master=None):
         self.params=params()
+        
+        self.cnn=cnn_classification(self.params.files['model'])
+        print('load model '+self.params.files['model'])
         
         tk.Frame.__init__(self, master, background="green")
         self.pack(fill="both", expand=True)
@@ -118,15 +123,20 @@ class Application(tk.Frame):
             for image in fo[2]:
                 self.text.insert(tk.END, 'processing : '+image+'\n')
                 
-                # PROCESS ONE IMAGE
-                # CLASSIFY
-                # CREATE FOLDER IF DOES NOT EXSISTS
-                # copy image to folder
-            # MARK FOLDER AS PROCESSED    
-            file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
-            file.close()
+                image_file=os.path.join(measure_dir,fo[0],fo[1],image)
+                im = create_image(image_file)
+                predicted_label, prob = self.cnn.classify(im)
+                self.text.insert(tk.END, 'label : '+str(predicted_label)+'\n')
+                self.text.see(tk.END)
+#                
+#                 PROCESS ONE IMAGE
+#                 CLASSIFY
+#                 CREATE FOLDER IF DOES NOT EXSISTS
+#                 copy image to folder
+#             MARK FOLDER AS PROCESSED    
+#            file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
+#            file.close()
             
-#            self.text.see(tk.END)
 
 if __name__ == "__main__":
     

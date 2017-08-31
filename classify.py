@@ -22,7 +22,7 @@ from cntk import load_model
 
 user='picturio'
 imgSize=32
-num_classes  = 33
+num_classes  = 16
 
 
 
