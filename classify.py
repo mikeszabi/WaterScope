@@ -10,7 +10,7 @@ import warnings
 
 import os
 import csv
-import tools
+#import tools
 import crop
 
 import numpy as np
@@ -28,8 +28,6 @@ num_classes  = 16
 
 #typedict_2_file=os.path.join(image_dir,'TypeDict_2.csv')
 
-
-image_dir=r'C:\Users\picturio\OneDrive\WaterScope\TEST'
 
 user='picturio'
 
