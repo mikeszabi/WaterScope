@@ -74,6 +74,14 @@ for blob in blobs:
     y, x, r = blob
     c = plt.Circle((x, y), r, color='red', linewidth=2, fill=False)
     axes.add_patch(c)
+    
+
+areas = [prop.area for prop in props]    
+    if areas:       
+        prop_large = props[np.argmax(areas)]       
+        bb=prop_large.bbox
+    else:
+        bb=(0,0,gray.shape[0],gray.shape[1])
 
 
 

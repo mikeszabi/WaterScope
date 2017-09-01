@@ -20,6 +20,8 @@ from skimage import img_as_ubyte
 
 from cntk import load_model
 
+from file_helper import imagelist_in_depth
+
 user='picturio'
 imgSize=32
 num_classes  = 16
@@ -29,23 +31,22 @@ num_classes  = 16
 #typedict_2_file=os.path.join(image_dir,'TypeDict_2.csv')
 
 
-user='picturio'
+user='SzMike'
 
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-orig_image_dir=os.path.join(data_dir,'cropped_highclass_20170710')
-
-output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
+image_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope\TEST')
+db_image_dir=os.path.join(data_dir,'db_images')
 
 out_file=os.path.join(image_dir,'class_res.csv')
 
-train_dir=os.path.join(output_base_dir,'Training')
+train_dir=os.path.join(data_dir,'Training')
 
 model_file=os.path.join(train_dir,'cnn_model.dnn')
 
 included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
 
 
-typedict_3_file=os.path.join(orig_image_dir,'TypeDict_3.csv')
+typedict_3_file=os.path.join(db_image_dir,'TypeDict_3.csv')
 type_dict_3={}
 reader =csv.DictReader(open(typedict_3_file, 'rt'), delimiter=';')
 for row in reader:
@@ -62,7 +63,7 @@ def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
 
 
-image_list_indir = tools.imagelist_in_depth(image_dir,level=2)
+image_list_indir = imagelist_in_depth(image_dir,level=1)
 
 preds=[]
 
