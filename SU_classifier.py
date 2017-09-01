@@ -8,8 +8,10 @@ Created on Mon Aug 28 19:59:11 2017
 import tkinter as tk
 import time
 import os
+import shutil
+import csv
 import xml.etree.ElementTree as ET
-from file_helper import images2process_list_in_depth
+from file_helper import images2process_list_in_depth, check_folder
 from classifications import create_image, cnn_classification
 
 #import sys
@@ -18,6 +20,9 @@ from classifications import create_image, cnn_classification
 # Logging setup
 #log_file='progress.log'
 #logging.basicConfig(filename=log_file,level=logging.DEBUG)
+
+def keysWithValue(aDict, target):
+    return sorted(key for key, value in aDict.items() if target == value)
 
 class params:
     
@@ -29,10 +34,27 @@ class params:
         self.dirs['root'] = tree.find('folders/root').text 
         self.dirs['measurement'] = tree.find('folders/measurement').text 
         self.dirs['classification'] = tree.find('folders/classification').text 
+        self.dirs['results'] = tree.find('folders/results').text 
         self.files['control'] = tree.find('files/control').text 
         self.files['measure'] = tree.find('files/measure').text
         self.files['model'] = os.path.join(tree.find('folders/model').text,
                                           tree.find('files/model').text)
+        self.files['typedict'] = os.path.join(tree.find('folders/model').text,
+                                          tree.find('files/typedict').text)
+        
+        self.type_dict=self.get_typedict(self.files['typedict'])
+        
+    def get_typedict(self,typedict_file):
+        type_dict={}
+        if os.path.isfile(typedict_file):
+            reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
+            for row in reader:
+                type_dict[row['type']]=row['label']
+            print('typeDict loaded')
+        else:
+            for i in range(100):
+                type_dict[str(i)]=str(i)
+        return type_dict
                                  
 
 class Application(tk.Frame):
@@ -44,6 +66,11 @@ class Application(tk.Frame):
         
         self.cnn=cnn_classification(self.params.files['model'])
         print('load model '+self.params.files['model'])
+        
+        # check result folder
+        check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification']),create=True)
+        check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification'],self.params.dirs['results']),create=True)
+        print('result folders are checked and created')
         
         tk.Frame.__init__(self, master, background="green")
         self.pack(fill="both", expand=True)
@@ -100,8 +127,8 @@ class Application(tk.Frame):
         self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
         
     def onUpdate(self):
-        # ToDo: update date entry with clear on new days
         measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
+        # get list of images to process
         images2process_list_indir=images2process_list_in_depth(measure_dir,
                                                                file2check1=[self.params.files['control']],
                                                                file2check2=[self.params.files['measure']],
@@ -120,22 +147,28 @@ class Application(tk.Frame):
         for fo in images2process_list_indir:
             cur_dir=os.path.join(measure_dir,fo[0],fo[1])
             self.text.insert(tk.END, 'visiting : '+cur_dir+'\n')
+            res_folder1=os.path.join(self.params.dirs['root'],self.params.dirs['classification'],
+                                self.params.dirs['results'],fo[0])
+            check_folder(folder=res_folder1,create=True)
+            res_folder=os.path.join(res_folder1,fo[1])
+            check_folder(folder=res_folder,create=True)
+
             for image in fo[2]:
                 self.text.insert(tk.END, 'processing : '+image+'\n')
                 
                 image_file=os.path.join(measure_dir,fo[0],fo[1],image)
                 im = create_image(image_file)
                 predicted_label, prob = self.cnn.classify(im)
-                self.text.insert(tk.END, 'label : '+str(predicted_label)+'\n')
+                predicted_type=keysWithValue(self.params.type_dict,str(predicted_label))[0]
+                self.text.insert(tk.END, 'result : '+'type : '+predicted_type+' ; prob : '+str(prob)+'\n')
                 self.text.see(tk.END)
-#                
-#                 PROCESS ONE IMAGE
-#                 CLASSIFY
-#                 CREATE FOLDER IF DOES NOT EXSISTS
-#                 copy image to folder
-#             MARK FOLDER AS PROCESSED    
-#            file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
-#            file.close()
+                
+                class_folder=os.path.join(res_folder,predicted_type)
+                check_folder(folder=class_folder,create=True)
+                shutil.copy(image_file,os.path.join(class_folder,image))               
+  
+                file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
+                file.close()
             
 
 if __name__ == "__main__":

@@ -47,11 +47,11 @@ model_file=os.path.join(train_dir,'cnn_model.dnn')
 included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
 
 
-typedict_2_file=os.path.join(orig_image_dir,'TypeDict_2.csv')
-type_dict_2={}
-reader =csv.DictReader(open(typedict_2_file, 'rt'), delimiter=';')
+typedict_3_file=os.path.join(orig_image_dir,'TypeDict_3.csv')
+type_dict_3={}
+reader =csv.DictReader(open(typedict_3_file, 'rt'), delimiter=';')
 for row in reader:
-    type_dict_2[row['type']]=row['label']
+    type_dict_3[row['type']]=row['label']
 
 # LOAD MODEL
 pred=load_model(model_file)
