@@ -23,6 +23,7 @@ from skimage import measure
 from skimage import filters
 
 import skimage.io as io
+import matplotlib.patches as patches
 
 from skimage.feature import blob_dog, blob_log, blob_doh
 
@@ -90,8 +91,11 @@ for i, image_file_full in enumerate(image_list_indir):
 #    image_file_full=os.path.join(db_image_dir,
 #                             '0000279_DHM2.0.20151007.000..20151012T104022-0001.png')
     
-    df.loc[df['Filename'] == os.path.basename(image_file_full)]
-
+    label=df.loc[df['Filename'] == os.path.basename(image_file_full)]
+    if not label.empty:
+        category=label['Class name'].values[0]
+    else:
+        category='none'
     
     img = Image.open(image_file_full)
     im = np.asarray(img,dtype=np.uint8)
@@ -112,47 +116,44 @@ for i, image_file_full in enumerate(image_list_indir):
     #mask=morphology.binary_dilation(mask,morphology.disk(3))
     
     edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.01, high_threshold=0.995, use_quantiles=True)
-    #plt.imshow(edges1)
+    #plt.imshow(edges2)
     
     #edges1 = feature.canny(gray, sigma=2)
     #edges2 = morphology.binary_closing(edges1,morphology.disk(11))
-    edges3 = morphology.binary_dilation(edges1,morphology.disk(11))
+    edges2 = morphology.binary_dilation(edges1,morphology.disk(11))
     
     save_file=os.path.join(save_dir,os.path.basename(image_file_full))
     
-    qq=mask_color_img(im, edges3, color=[255, 255, 0], alpha=0.5)
+    qq=mask_color_img(im, edges2, color=[255, 255, 0], alpha=0.5)
     #qq=mask_color_img(im, mask, color=[255, 0, 0], alpha=0.8)
     
     im_save = Image.fromarray(qq.astype('uint8'))
     im_save.save(save_file)
     
-    # DoG
-#    blobs = blob_dog(1-gray, min_sigma=25, threshold=.1, overlap=True)
-#    if blobs.size>0: 
-#        blobs[:, 2] = blobs[:, 2] * math.sqrt(2)
-#    
-#    # DoH
-#    #blobs = blob_doh(image_gray, max_sigma=30, threshold=.01)
-#    
-#    save_file=os.path.join(save_dir2,os.path.basename(image_file_full))
-#    fig, axes = plt.subplots(1, 1, figsize=(9, 3), sharex=True, sharey=True,
-#                             subplot_kw={'adjustable': 'box-forced'})
-#    axes.imshow(im, interpolation='nearest')
-#    for blob in blobs:
-#        y, x, r = blob
-#        c = plt.Circle((x, y), r, color='red', linewidth=2, fill=False)
-#        axes.add_patch(c)
-#    axes.axis('off')
-#    fig.savefig(save_file)
-#    plt.close('all')
-
+    label_im=measure.label(edges2)
+    props = measure.regionprops(label_im)
+         
+    bb=(0,0,gray.shape[0],gray.shape[1])
+   
+    areas = [prop.area for prop in props]    
+    l = [prop.major_axis_length  for prop in props]  
+    if areas:    
+        if max(l)>max(gray.shape[0],gray.shape[1])*0.25:
+            prop_large = props[np.argmax(areas)]       
+            bb=prop_large.bbox
     
-#    blurred = filters.gaussian(gray, 8)
-#    
-#    th=filters.threshold_otsu(highpass)
-#    mask=gray<th
-#    
-#    highpass = gray - 0.8 * blurred
+    fig, (ax1) = plt.subplots(nrows=1, ncols=1, figsize=(8, 3))
+    fig.suptitle(category)
 
-# f = np.fft.fft2(im)                  #do the fourier transform
-#fshift1 = np.absolute(np.fft.fftshift(f))          #shift the zero to the center   
+    ax1.imshow(qq, cmap=plt.cm.gray)
+    ax1.axis('off')
+    ax1.add_patch(patches.Rectangle(
+                (bb[1], bb[0]),   # (x,y)
+                    bb[3]-bb[1],        # width
+                    bb[2]-bb[0],       # height
+                    fill=False))         
+    
+    ax1.axis('off')
+             
+    fig.savefig(save_file)
+    plt.close('all')

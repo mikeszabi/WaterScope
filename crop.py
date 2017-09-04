@@ -36,11 +36,12 @@ def crop_edge(gray):
     props = measure.regionprops(label_im)
     
     areas = [prop.area for prop in props]    
-    if areas:       
-        prop_large = props[np.argmax(areas)]       
-        bb=prop_large.bbox
-    else:
-        bb=(0,0,gray.shape[0],gray.shape[1])
+    l = [prop.major_axis_length  for prop in props]  
+    if areas:    
+        if max(l)>max(gray.shape[0],gray.shape[1])*0.25:
+            prop_large = props[np.argmax(areas)]       
+            bb=prop_large.bbox
+
     return bb
 
 def crop_blob(gray):
@@ -111,16 +112,12 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
         
             ax1.imshow(im, cmap=plt.cm.gray)
             ax1.axis('off')
+       
             ax1.add_patch(patches.Rectangle(
-                        (bb[0], bb[1]),   # (x,y)
-                            bb[2],        # width
-                            bb[3],       # height
-                            fill=False))          
-            #ax1.set_title('Original', fontsize=20)
-        
-#            ax2.imshow(edges2, cmap=plt.cm.gray)
-#            ax2.axis('off')
-            #ax2.set_title('Binary', fontsize=20)
+                        (bb[1], bb[0]),   # (x,y)
+                            bb[3]-bb[1],        # width
+                            bb[2]-bb[0],       # height
+                            fill=False))
             
             ax2.imshow(im_cropped, cmap=plt.cm.gray)
             ax2.axis('off')
