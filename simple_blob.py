@@ -54,13 +54,13 @@ img_rgb=img.convert('RGB')     # if png
 
 im = np.asarray(img_rgb,dtype=np.uint8)
 
-image_gray = rgb2gray(im)
+gray = rgb2gray(im)
 
 # LoG
 #blobs = blob_log(1-image_gray, max_sigma=30, num_sigma=10, threshold=.05)
 
 # DoG
-blobs = blob_dog(1-image_gray, min_sigma=5, threshold=.1)
+blobs = blob_dog(1-gray, min_sigma=10, threshold=.2)
 blobs[:, 2] = blobs[:, 2] * math.sqrt(2)
 
 # DoH
@@ -76,12 +76,7 @@ for blob in blobs:
     axes.add_patch(c)
     
 
-areas = [prop.area for prop in props]    
-    if areas:       
-        prop_large = props[np.argmax(areas)]       
-        bb=prop_large.bbox
-    else:
-        bb=(0,0,gray.shape[0],gray.shape[1])
+
 
 
 

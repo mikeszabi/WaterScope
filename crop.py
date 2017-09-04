@@ -28,9 +28,9 @@ import numpy as np
 
 
 def crop_edge(gray):
-    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.15, high_threshold=0.25)
-    #edges1 = feature.canny(gray, sigma=2)
-    edges2 = morphology.binary_dilation(edges1,morphology.disk(5))
+    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.01, high_threshold=0.995, use_quantiles=True)
+
+    edges2 = morphology.binary_dilation(edges1,morphology.disk(11))
     
     label_im=measure.label(edges2)
     props = measure.regionprops(label_im)
