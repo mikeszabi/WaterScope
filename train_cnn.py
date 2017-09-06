@@ -44,16 +44,16 @@ num_classes  = 16
 
 def create_basic_model(input, out_dims):
     
-    convolutional_layer_1  = Convolution((3,3), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
-    pooling_layer_1  = MaxPooling((2,2), strides=(1,1))(convolutional_layer_1 )
+#    convolutional_layer_1  = Convolution((3,3), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
+#    pooling_layer_1  = MaxPooling((2,2), strides=(1,1))(convolutional_layer_1 )
 
-    convolutional_layer_2 = Convolution((5,5), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
+    convolutional_layer_2 = Convolution((5,5), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
     pooling_layer_2 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_2)
 
-    convolutional_layer_3 = Convolution((9,9), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
+    convolutional_layer_3 = Convolution((9,9), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
     pooling_layer_3 = MaxPooling((3,3), strides=(2,2))(convolutional_layer_3)
 ##    
-    fully_connected_layer  = Dense(512, init=glorot_uniform())(pooling_layer_3)
+    fully_connected_layer  = Dense(256, init=glorot_uniform())(pooling_layer_3)
     dropout_layer = Dropout(0.5)(fully_connected_layer)
 
     output_layer = Dense(out_dims, init=glorot_uniform(), activation=None)(dropout_layer)
@@ -151,6 +151,7 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
     #progress_printer = ProgressPrinter(tag='Training')
 
     # perform model training
+    stop_run=False
     batch_index = 0
     plot_data = {'batchindex':[], 'loss':[], 'error':[]}
     for epoch in range(max_epochs):       # loop over epochs
@@ -168,6 +169,11 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
             
             progress_printer.update_with_trainer(trainer, with_metric=True) # log progress
             batch_index += 1
+            if trainer.previous_minibatch_evaluation_average < 0.025:
+                stop_run=True
+                break
+        if stop_run:
+            break
         progress_printer.epoch_summary(with_metric=True)
         #trainer.save_checkpoint(model_temp_file)
         
@@ -237,7 +243,7 @@ def train_and_evaluate(reader_train, reader_test, max_epochs, model_func):
 reader_train = create_reader(train_map, data_mean_file, True)
 reader_test  = create_reader(test_map, data_mean_file, False)
 
-pred = train_and_evaluate(reader_train, reader_test, max_epochs=800,
+pred = train_and_evaluate(reader_train, reader_test, max_epochs=1000,
                           model_func=create_basic_model)
 #pred_batch= train_and_evaluate(reader_train, reader_test, max_epochs=10, model_func=create_basic_model_with_batch_normalization)
 

@@ -31,6 +31,8 @@ def crop_edge(gray):
     edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.01, high_threshold=0.995, use_quantiles=True)
 
     edges2 = morphology.binary_dilation(edges1,morphology.disk(11))
+ 
+    bb=(0,0,gray.shape[0],gray.shape[1])
     
     label_im=measure.label(edges2)
     props = measure.regionprops(label_im)
@@ -38,7 +40,7 @@ def crop_edge(gray):
     areas = [prop.area for prop in props]    
     l = [prop.major_axis_length  for prop in props]  
     if areas:    
-        if max(l)>max(gray.shape[0],gray.shape[1])*0.25:
+        if max(l)>max(gray.shape[0],gray.shape[1])*0.1:
             prop_large = props[np.argmax(areas)]       
             bb=prop_large.bbox
 
@@ -71,7 +73,7 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     
     gray=rgb2gray(im)
     
-    bb=crop_blob(gray)
+    bb=crop_edge(gray)
     
 #    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.15, high_threshold=0.25)
 #    #edges1 = feature.canny(gray, sigma=2)

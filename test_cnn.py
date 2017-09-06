@@ -23,6 +23,8 @@ user='picturio'
 imgSize=32
 num_classes  = 16
 
+write_misc=False
+
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 db_image_dir=os.path.join(data_dir,'db_images')
 proc_image_dir=os.path.join(data_dir,'processed_images')
@@ -88,7 +90,8 @@ for i, im_name in enumerate(df['image']):
        
     result  = np.round(np.squeeze(pred.eval({pred.arguments[0]:[pic]}))*100)
     predicted_label=np.argmax(result)
-    contingency_table[predicted_label,label]+=1
+    contingency_table[label,predicted_label]+=1
+    # rows are actual labels, cols are predictions,                  
     if predicted_label  != label:
         mis_item=[os.path.basename(im_name),
         keysWithValue(type_dict,str(predicted_label)),
@@ -99,15 +102,46 @@ for i, im_name in enumerate(df['image']):
 #    print(keysWithValue(param.wbc_basic_types,str(mr)))
 #    plt.imshow(im)
 #    
-a=[i[1][0] for i in misclassified]
-for misc in misclassified:
-    image_file=os.path.join(proc_image_dir,misc[0])    
-    save_file=os.path.join(data_dir,'misc',misc[1][0]+'___'+misc[0])
-    # "predicted label"___"original label"
-    im=io.imread(image_file)
-    io.imsave(save_file,im)
-    print(misc)
-    
+
 cont_table=pd.DataFrame(data=contingency_table,    # values
               index=sorted_classes,    # 1st column as index
               columns=sorted_classes)  # 1st row as the column names
+
+if write_misc:
+    a=[i[1][0] for i in misclassified]
+    for misc in misclassified:
+        image_file=os.path.join(proc_image_dir,misc[0])    
+        save_file=os.path.join(data_dir,'misc',misc[1][0]+'___'+misc[0])
+        # "predicted label"___"original label"
+        im=io.imread(image_file)
+        io.imsave(save_file,im)
+        print(misc)
+    
+
+
+# Calculate statistical measures 1vsAll
+num_classes=cont_table.shape[0]
+n_obs=cont_table.sum().sum()
+
+
+tp=[None]*num_classes # correct classification
+tn=[None]*num_classes # 
+# True positive for i-th class; 1 vs. all
+        
+tp=[cont_table.iloc[i,i] for i in range(0,num_classes)] # correctly identified
+fp=[-tp[i]+sum(cont_table.iloc[i,:]) for i in range(0,num_classes)] # incorrectly identified class members
+fn=[-tp[i]+sum(cont_table.iloc[:,i]) for i in range(0,num_classes)] # incorrectly identified non-class members
+tn=[n_obs-fp[i]-fn[i]-tp[i] for i in range(0,num_classes)] # correctly identified non-class members
+
+# MACRO
+beta=1
+
+avg_accuracy=sum([(tp[i]+tn[i])/(tp[i]+fn[i]+fp[i]+tn[i]) for i in range(0,num_classes)])/num_classes
+# MACRO - all classes equally weighted
+precision=sum([(tp[i])/(tp[i]+fp[i]) for i in range(0,num_classes)])/num_classes
+recall=sum([(tp[i])/(tp[i]+fn[i]) for i in range(0,num_classes)])/num_classes
+# MICRO - larger classes have more weight
+precision=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fp[i]) for i in range(0,num_classes)])
+recall=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fn[i]) for i in range(0,num_classes)])
+
+fscore=(np.square(beta)+1)*precision*recall/(np.square(beta)*precision+recall)
