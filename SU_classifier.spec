@@ -1,13 +1,20 @@
 # -*- mode: python -*-
 
+from distutils.sysconfig import get_python_lib
+from os import path 
+skimage_plugins = Tree(
+    path.join(get_python_lib(), "skimage","io","_plugins"), 
+    prefix=path.join("skimage","io","_plugins"),
+    )
+
 block_cipher = None
 
 
 a = Analysis(['SU_classifier.py'],
-             pathex=['c:\\Users\\szmike\\Documents\\Projects\\WaterScope'],
+             pathex=['e:\\Projects\\WaterScope'],
              binaries=[],
              datas=[],
-             hiddenimports=[],
+             hiddenimports=['cython', 'sklearn', 'sklearn.neighbors.typedefs'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -21,6 +28,7 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
+	  skimage_plugins,
           name='SU_classifier',
           debug=False,
           strip=False,
