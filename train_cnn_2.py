@@ -142,14 +142,16 @@ lr_per_minibatch       = learning_rate_schedule([0.01]*10 + [0.003]*10 + [0.001]
 momentum_time_constant = momentum_as_time_constant_schedule(-minibatch_size/np.log(0.9))
 l2_reg_weight          = 0.001
 
-# trainer object
+# trainer objectS
 progress_printer = ProgressPrinter(0)
 
 learner     = momentum_sgd(z.parameters, 
                            lr = lr_per_minibatch, momentum = momentum_time_constant, 
                            l2_regularization_weight=l2_reg_weight)
 
-#trainer.restore_from_checkpoint(model_temp_file)
+
+######### RESTORE TRAINER IF NEEDED
+# trainer.restore_from_checkpoint(model_temp_file)
 trainer     = Trainer(z, (ce, pe), [learner], [progress_printer])
 
 # define mapping from reader streams to network inputs
@@ -183,7 +185,7 @@ for epoch in range(max_epochs):       # loop over epochs
         batch_index += 1
         ev_avg+=trainer.previous_minibatch_evaluation_average
         i_count+=1
-    if ev_avg/i_count < 0.025:
+    if ev_avg/i_count < 0.02:
         break
     progress_printer.epoch_summary(with_metric=True)
     print(epoch,' : ',ev_avg/i_count)
