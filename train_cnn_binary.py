@@ -18,7 +18,7 @@ from cntk import momentum_sgd, learning_rate_schedule, UnitType, momentum_as_tim
 from cntk.logging import log_number_of_parameters, ProgressPrinter
 
 
-from model_functions import create_basic_model, create_advanced_model
+from model_functions import create_shallow_model
 
 user='picturio'
 output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
@@ -26,21 +26,21 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 
 train_dir=os.path.join(output_base_dir,'Training')
 
-model_file=os.path.join(train_dir,'cnn_model.dnn')
+model_file=os.path.join(train_dir,'cnn_model_binary.dnn')
 model_temp_file=os.path.join(train_dir,'cnn_model_temp.dnn')
 
-train_map=os.path.join(train_dir,'train_map.txt')
-test_map=os.path.join(train_dir,'test_map.txt')
+train_map=os.path.join(train_dir,'train_map_binary.txt')
+test_map=os.path.join(train_dir,'test_map_binary.txt')
 # GET train and test map from prepare4train
 
-data_mean_file=os.path.join(train_dir,'data_mean.xml')
+data_mean_file=os.path.join(train_dir,'data_mean_binary.xml')
 
 # model dimensions
 
 image_height = 32
 image_width  = 32
 num_channels = 3
-num_classes  = 16
+num_classes  = 2
 
 
 
@@ -76,8 +76,8 @@ reader_test  = create_reader(test_map, data_mean_file, False)
 #
 # Train and evaluate the network.
 #
-max_epochs=1500
-model_func=create_advanced_model
+max_epochs=500
+model_func=create_shallow_model
 
 input_var = input_variable((num_channels, image_height, image_width))
 label_var = input_variable((num_classes))
@@ -98,7 +98,7 @@ ce = cross_entropy_with_softmax(z, label_var)
 pe = classification_error(z, label_var)
 
 # training config
-epoch_size     = 25000
+epoch_size     = 36000 #15000
 minibatch_size = 64
 
 # Set training parameters
@@ -158,7 +158,7 @@ for epoch in range(max_epochs):       # loop over epochs
 #
 # Evaluation action
 #
-epoch_size     = 10000
+epoch_size     = 12000 #5000
 minibatch_size = 32
 
 # process minibatches and evaluate the model

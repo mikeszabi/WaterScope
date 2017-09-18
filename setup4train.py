@@ -86,7 +86,7 @@ for i, image_file in enumerate(image_list_indir):
 sampleCount=Counter(samples_all.values())
 
 # remove samples with low counts
-samples_enough = {k: v for k, v in samples_all.items() if sampleCount[v]>20*4}
+samples_enough = {k: v for k, v in samples_all.items() if sampleCount[v]>50*4}
 
 categories=sorted(Counter(samples_enough.values()))
 
