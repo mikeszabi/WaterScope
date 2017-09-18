@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <folders>
-        <root>c:\Users\szmike\Documents\Projects\WaterScope\work</root>
+        <root>e:\Projects\WaterScope\work</root>
         <measurement>Measurement</measurement>
         <classification>SUClassification</classification>
         <results>results</results>

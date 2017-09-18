@@ -167,8 +167,8 @@ class Application(tk.Frame):
                 check_folder(folder=class_folder,create=True)
                 shutil.copy(image_file,os.path.join(class_folder,image))               
   
-                file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
-                file.close()
+            file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
+            file.close()
             
 
 if __name__ == "__main__":
