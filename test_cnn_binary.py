@@ -21,7 +21,7 @@ from cfg import *
 from cntk import load_model
 
 user='picturio'
-imgSize=64
+imgSize=32
 num_classes  = 2
 
 write_misc=False
@@ -148,9 +148,10 @@ fscore=(np.square(beta)+1)*precision*recall/(np.square(beta)*precision+recall)
 ##
 
 dd=df_res.groupby('orig_quality')
-
-q_qual=dd.describe()
-
+q_qual=dd.agg([np.mean,len])
+#q_qual=dd.describe().loc[['count','mean']]
+print(q_qual)
 dd=df_res.groupby('orig_category')
+q_cat=dd.agg([np.mean,len])
+print(q_cat)
 
-q_cat=dd.describe(percentiles=[])

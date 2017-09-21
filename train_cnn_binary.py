@@ -76,7 +76,7 @@ reader_test  = create_reader(test_map, data_mean_file, False)
 #
 # Train and evaluate the network.
 #
-max_epochs=500
+max_epochs=750
 model_func=create_shallow_model
 
 input_var = input_variable((num_channels, image_height, image_width))
@@ -88,6 +88,7 @@ input_var_norm = element_times(feature_scale, input_var)
 
 # apply model to input
 z = model_func(input_var_norm, out_dims=num_classes)
+log_number_of_parameters(z) ; print()
 
 #
 # Training action
@@ -98,7 +99,7 @@ ce = cross_entropy_with_softmax(z, label_var)
 pe = classification_error(z, label_var)
 
 # training config
-epoch_size     = 36000 #15000
+epoch_size     = 36000 #12000 #15000
 minibatch_size = 64
 
 # Set training parameters
@@ -124,7 +125,6 @@ input_map = {
     label_var: reader_train.streams.labels
 }
 
-log_number_of_parameters(z) ; print()
 #progress_printer = ProgressPrinter(tag='Training')
 
 # perform model training
@@ -158,7 +158,7 @@ for epoch in range(max_epochs):       # loop over epochs
 #
 # Evaluation action
 #
-epoch_size     = 12000 #5000
+epoch_size     = 12000 #4000 #5000
 minibatch_size = 32
 
 # process minibatches and evaluate the model

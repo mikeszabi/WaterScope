@@ -68,6 +68,7 @@ for i, image_file in enumerate(image_list_indir):
 sampleCount=Counter(samples.values())
 
 print('Number of classes : '+str(len(sampleCount)))        
+print('Sample size of smaller class : '+str(sampleCount[1]))
 
 # CREATE TEST AND TRAIN LIST USING RANDOM SPLIT
 i=0

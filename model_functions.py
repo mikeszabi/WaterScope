@@ -10,15 +10,15 @@ from cntk.initializer import glorot_uniform
 
 def create_shallow_model(input, out_dims):
     
-    convolutional_layer_1  = Convolution((5,5), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
-    pooling_layer_1  = MaxPooling((2,2), strides=(1,1))(convolutional_layer_1 )
+    convolutional_layer_1  = Convolution((5,5), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
+    pooling_layer_1  = MaxPooling((2,2), strides=(2,2))(convolutional_layer_1 )
     
-#    convolutional_layer_2 = Convolution((9,9), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
-#    pooling_layer_2 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_2)
-
-##    
-    fully_connected_layer  = Dense(2048, init=glorot_uniform())(pooling_layer_1)
-    dropout_layer = Dropout(0.5)(fully_connected_layer)
+    convolutional_layer_2 = Convolution((9,9), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
+    pooling_layer_2 = MaxPooling((2,2), strides=(2,2))(convolutional_layer_2)
+ 
+    fully_connected_layer_1  = Dense(256, init=glorot_uniform())(pooling_layer_2)   
+    fully_connected_layer_2  = Dense(128, init=glorot_uniform())(fully_connected_layer_1)
+    dropout_layer = Dropout(0.5)(fully_connected_layer_2)
 
     output_layer = Dense(out_dims, init=glorot_uniform(), activation=None)(dropout_layer)
     
@@ -28,9 +28,9 @@ def create_shallow_model(input, out_dims):
 def create_basic_model(input, out_dims):
     
     convolutional_layer_1  = Convolution((3,3), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
-    #pooling_layer_1  = MaxPooling((2,2), strides=(1,1))(convolutional_layer_1 )
+    pooling_layer_1  = MaxPooling((2,2), strides=(1,1))(convolutional_layer_1 )
 
-    convolutional_layer_2 = Convolution((5,5), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_1)
+    convolutional_layer_2 = Convolution((5,5), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
     pooling_layer_2 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_2)
 
     convolutional_layer_3 = Convolution((9,9), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)

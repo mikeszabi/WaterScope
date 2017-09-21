@@ -184,5 +184,5 @@ saveTestImages(test_image_list_file,train_dir)
 print ('Done.')
 
 # enrich!
-train_map=balanceMap(train_map_o,min_count=0, max_count=10000)
-test_map=balanceMap(test_map_o,min_count=0, max_count=2500)
+train_map=balanceMap(train_map_o,min_count=0, max_count=6000)
+test_map=balanceMap(test_map_o,min_count=0, max_count=2000)
