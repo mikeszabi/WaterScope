@@ -11,6 +11,8 @@ import numpy as np
 from PIL import Image
 from skimage.transform import resize
 from skimage import img_as_ubyte
+import skimage.io as io
+io.use_plugin('pil') # Use only the capability of PIL
 
 from cntk import load_model
 
@@ -20,10 +22,13 @@ import crop
 def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
 
-def create_image(image_file):
-    img = Image.open(image_file)
-    img_square=crop.crop(img)
-    im=np.asarray(img_square)
+def create_image(image_file,cropped=True):
+    if cropped:
+        img = Image.open(image_file)
+        img_square=crop.crop(img)
+        im=np.asarray(img_square)
+    else:
+        im=io.imread(image_file)
     return im
 
 class cnn_classification:

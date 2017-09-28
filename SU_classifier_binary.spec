@@ -10,7 +10,7 @@ skimage_plugins = Tree(
 block_cipher = None
 
 
-a = Analysis(['SU_classifier.py'],
+a = Analysis(['SU_classifier_binary.py'],
              pathex=['d:\\Projects\\WaterScope'],
              binaries=[],
              datas=[],
@@ -29,7 +29,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
 	  skimage_plugins,
-          name='SU_classifier',
+          name='SU_classifier_binary',
           debug=False,
           strip=False,
           upx=True,

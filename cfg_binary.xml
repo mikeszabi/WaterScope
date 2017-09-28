@@ -12,8 +12,7 @@
         <control>control.log</control>
         <settings>settings-settings.xml</settings>
         <measure>(Measure).*(.xml)</measure>
-        <model>cnn_model.dnn</model>
-        <typedict>TypeDict_3.csv</typedict>
+        <model>cnn_model_binary.dnn</model>
     </files>
     <processing>       
     	 <delete_files>false</delete_files>
