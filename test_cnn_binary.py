@@ -87,21 +87,31 @@ for i, im_name in enumerate(df_test['image']):
     predicted_label=np.argmax(result)
     contingency_table[label,predicted_label]+=1
     row=df_db.loc[df_db['Filename'] == os.path.basename(image_file)]
-    # rows are actual labels, cols are predictions,                  
-    if predicted_label  != label:
-        mis_item=[os.path.basename(im_name),
-        keysWithValue(type_dict,str(predicted_label)),
-        row['Class name'].values[0]]
-        misclassified.append(mis_item)
-
-    row=df_db.loc[df_db['Filename'] == os.path.basename(image_file)]
-    df_temp=pd.DataFrame({'Filename':row['Filename'].values[0],
+    if not row.empty:
+        class_name=row['Class name'].values[0]
+        row=df_db.loc[df_db['Filename'] == os.path.basename(image_file)]
+        df_temp=pd.DataFrame({'Filename':row['Filename'].values[0],
                         'orig_quality':row['Class quality'].values[0],
                         'orig_category':row['Class name'].values[0],
                         'label':label,
                         'predicted_label':predicted_label},index=[i])
-    df_res=pd.concat([df_res,df_temp])      
-#    
+    else:
+        class_name='Recycle bin'
+        df_temp=pd.DataFrame({'Filename':os.path.basename(image_file),
+                        'orig_quality':'deleted',
+                        'orig_category':'Recycle bin',
+                        'label':label,
+                        'predicted_label':predicted_label},index=[i])
+    df_res=pd.concat([df_res,df_temp])          
+    # rows are actual labels, cols are predictions,                  
+    if predicted_label  != label:
+            mis_item=[os.path.basename(im_name),
+                    keysWithValue(type_dict,str(predicted_label)),
+                    class_name]
+            misclassified.append(mis_item)
+
+    
+###
 
 cont_table=pd.DataFrame(data=contingency_table,    # values
               index=type_dict.keys(),    # 1st column as index

@@ -99,7 +99,7 @@ ce = cross_entropy_with_softmax(z, label_var)
 pe = classification_error(z, label_var)
 
 # training config
-epoch_size     = 36000 #12000 #15000
+epoch_size     = 6400 #12000 #15000
 minibatch_size = 64
 
 # Set training parameters
@@ -158,7 +158,7 @@ for epoch in range(max_epochs):       # loop over epochs
 #
 # Evaluation action
 #
-epoch_size     = 12000 #4000 #5000
+epoch_size     = 3200 #4000 #5000
 minibatch_size = 32
 
 # process minibatches and evaluate the model
