@@ -19,7 +19,9 @@ from skimage.transform import resize
 from skimage import img_as_ubyte
 from cfg import *
 
-from cntk import load_model
+#from cntk import load_model
+
+import classification
 
 user='picturio'
 imgSize=32
@@ -47,10 +49,12 @@ type_dict={'Trash':'0','Object':'1'}
 
 
 # LOAD MODEL
-pred=load_model(model_file)
+#pred=load_model(model_file)
+#image_mean   = 128
+cnn=classifications.cnn_classification(model_file)
 
 
-image_mean   = 128
+
 
 
 def keysWithValue(aDict, target):
@@ -76,18 +80,19 @@ for i, image_file in enumerate(image_list_indir):
     row=df_filtered.loc[df_filtered['Filename'] == os.path.basename(image_file)]
 
     if not row.empty:
-        im=io.imread(image_file)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            data = img_as_ubyte(resize(im, (imgSize,imgSize), order=1))
-        rgb_image=data.astype('float32')
-        rgb_image  -= image_mean
-        bgr_image = rgb_image[..., [2, 1, 0]]
-        pic = np.ascontiguousarray(np.rollaxis(bgr_image, 2))
-       
-        result  = np.round(np.squeeze(pred.eval({pred.arguments[0]:[pic]}))*100)
-        predicted_label=np.argmax(result)
-        
+         im = classifications.create_image(image_file,cropped=False)
+         predicted_label, prob = cnn.classify(im)
+        #        im=io.imread(image_file)
+        #        with warnings.catch_warnings():
+        #            warnings.simplefilter("ignore")
+        #            data = img_as_ubyte(resize(im, (imgSize,imgSize), order=1))
+        #        rgb_image=data.astype('float32')
+        #        rgb_image  -= image_mean
+        #        bgr_image = rgb_image[..., [2, 1, 0]]
+        #        pic = np.ascontiguousarray(np.rollaxis(bgr_image, 2))
+        #       
+        #        result  = np.round(np.squeeze(pred.eval({pred.arguments[0]:[pic]}))*100)
+        #        predicted_label=np.argmax(result)
         class_name=row['Class name'].values[0]
         row=df_db.loc[df_db['Filename'] == os.path.basename(image_file)]
         df_temp=pd.DataFrame({'Filename':row['Filename'].values[0],

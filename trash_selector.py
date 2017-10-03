@@ -5,7 +5,6 @@ Created on Mon Oct  2 22:06:04 2017
 @author: SzMike
 """
 
-from matplotlib import pyplot as plt
 import glob
 
 import classifications
@@ -16,13 +15,12 @@ import pandas as pd
 import os
 import shutil
 
-import numpy as np
 import skimage.io as io
 io.use_plugin('pil') # Use only the capability of PIL
 
 
 
-user='SzMike'
+user='picturio'
 imgSize=32
 num_classes  = 2
 
@@ -30,19 +28,19 @@ num_classes  = 2
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 db_image_dir=os.path.join(data_dir,'db_images')
 db_binsel_dir=os.path.join(data_dir,'db_binsel_images')
-db_file=os.path.join(db_image_dir,'Database.csv')
+#db_file=os.path.join(db_image_dir,'Database.csv')
 
 
 user='picturio'
 output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 #output_base_dir=r'd:\DATA\WaterScope'
 
-train_dir=os.path.join(output_base_dir,'Training')
 
-model_file=os.path.join(r'D:\Projects\WaterScope\model','cnn_model_binary.dnn')
+model_file=os.path.join(r'.\model','cnn_model_binary.dnn')
+cnn=classifications.cnn_classification(model_file)
 
 
-df_db = pd.read_csv(db_file,delimiter=';')
+#df_db = pd.read_csv(db_file,delimiter=';')
 
 type_dict={'Trash':'0','Object':'1'}
 
@@ -54,10 +52,6 @@ image_list_indir = []
 for ext in included_extenstions:
     image_list_indir.extend(glob.glob(os.path.join(db_image_dir, ext)))
 
-crop_map={}
-
-
-cnn=classifications.cnn_classification(model_file)
 
 for i, image_file in enumerate(image_list_indir):
 

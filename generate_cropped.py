@@ -34,9 +34,9 @@ qualities=df['Class quality']
 
 # filter df
 df_filtered=df[(df['Class quality']=='highclass') | (df['Class quality']=='unclassified')]
-#df_deleted=df[(df['Class quality']=='deleted')].sample(n=500)
+df_deleted=df[(df['Class quality']=='deleted')].sample(n=1000)
 #
-#df_filtered=df_filtered.append(df_deleted)
+df_filtered=df_filtered.append(df_deleted)
 
 # create image list
 image_list_indir = []
