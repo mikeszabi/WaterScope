@@ -44,11 +44,10 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 
 train_dir=os.path.join(output_base_dir,'Training')
 
-model_file=os.path.join(train_dir,'cnn_model.dnn')
+model_file=os.path.join(train_dir,'cnn_model_taxon.dnn')
 
 train_dir=os.path.join(output_base_dir,'Training')
 image_list_file=os.path.join(train_dir,'images_test.csv')
-model_file=os.path.join(train_dir,'cnn_model.dnn')
 
 
 # LOAD MODEL

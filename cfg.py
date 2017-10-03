@@ -17,10 +17,10 @@ data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 #data_dir=r'd:\DATA\WaterScope'
 
 
-db_image_dir=os.path.join(data_dir,'db_images')
+db_image_dir=os.path.join(data_dir,'db_binsel_images')
 trash_image_dir=os.path.join(data_dir,'Micro Supertrash')
 
-proc_image_dir=os.path.join(data_dir,'processed_images')
+proc_image_dir=os.path.join(data_dir,'processed_images_highclass')
 train_dir=os.path.join(data_dir,'Training')
 
 

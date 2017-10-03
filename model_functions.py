@@ -31,13 +31,13 @@ def create_basic_model(input, out_dims):
 #    pooling_layer_1  = MaxPooling((2,2), strides=(2,2))(convolutional_layer_1 )
 
     convolutional_layer_2 = Convolution((5,5), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
-    pooling_layer_2 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_2)
+    pooling_layer_2 = MaxPooling((2,2), strides=(2,2))(convolutional_layer_2)
 
     convolutional_layer_3 = Convolution((9,9), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
     pooling_layer_3 = MaxPooling((2,2), strides=(2,2))(convolutional_layer_3)
 ##    
-    fully_connected_layer  = Dense(2048, init=glorot_uniform())(pooling_layer_3)
-    fully_connected_layer_2  = Dense(1024, init=glorot_uniform())(fully_connected_layer)
+    fully_connected_layer  = Dense(1024, init=glorot_uniform())(pooling_layer_3)
+    fully_connected_layer_2  = Dense(512, init=glorot_uniform())(fully_connected_layer)
 
     dropout_layer = Dropout(0.5)(fully_connected_layer_2)
 
