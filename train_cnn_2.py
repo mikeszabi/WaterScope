@@ -26,7 +26,7 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 
 train_dir=os.path.join(output_base_dir,'Training')
 
-model_file=os.path.join(train_dir,'cnn_model.dnn')
+model_file=os.path.join(train_dir,'cnn_model_taxon.dnn')
 model_temp_file=os.path.join(train_dir,'cnn_model_temp.dnn')
 
 train_map=os.path.join(train_dir,'train_map.txt')
@@ -73,12 +73,16 @@ def create_reader(map_file, mean_file, train):
 reader_train = create_reader(train_map, data_mean_file, True)
 reader_test  = create_reader(test_map, data_mean_file, False)
 
-#
-# Train and evaluate the network.
-#
+#==============================================================================
+# SET parameters
+#==============================================================================
 max_epochs=750
-model_func=create_advanced_model
+model_func=create_basic_model
 
+
+#==============================================================================
+# ###
+#==============================================================================
 input_var = input_variable((num_channels, image_height, image_width))
 label_var = input_variable((num_classes))
 
@@ -98,7 +102,7 @@ ce = cross_entropy_with_softmax(z, label_var)
 pe = classification_error(z, label_var)
 
 # training config
-epoch_size     = 21000
+epoch_size     = 24000
 minibatch_size = 64
 
 # Set training parameters
@@ -158,7 +162,7 @@ for epoch in range(max_epochs):       # loop over epochs
 #
 # Evaluation action
 #
-epoch_size     = 7000
+epoch_size     = 8000
 minibatch_size = 32
 
 # process minibatches and evaluate the model

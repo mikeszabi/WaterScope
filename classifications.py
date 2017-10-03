@@ -22,10 +22,10 @@ import crop
 def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
 
-def create_image(image_file,cropped=True):
+def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category=''):
     if cropped:
         img = Image.open(image_file)
-        img_square=crop.crop(img)
+        img_square=crop.crop(img,pad_rate=0.25,save_file='',category='')
         im=np.asarray(img_square)
     else:
         im=io.imread(image_file)

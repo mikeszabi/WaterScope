@@ -21,7 +21,6 @@ from cfg import *
 
 
 db_file=os.path.join(db_image_dir,'Database.csv')
-
 save_dir=os.path.join(data_dir,'tmp')
 
 crop_map_file=os.path.join(db_image_dir,'crop_map.csv')
@@ -32,11 +31,12 @@ df = pd.read_csv(db_file,delimiter=';')
 
 qualities=df['Class quality']
 
+df_filtered=df
 # filter df
-df_filtered=df[(df['Class quality']=='highclass') | (df['Class quality']=='unclassified')]
-df_deleted=df[(df['Class quality']=='deleted')].sample(n=1000)
-#
-df_filtered=df_filtered.append(df_deleted)
+#df_filtered=df[(df['Class quality']=='highclass') | (df['Class quality']=='unclassified')]
+#df_deleted=df[(df['Class quality']=='deleted')].sample(n=1000)
+##
+#df_filtered=df_filtered.append(df_deleted)
 
 # create image list
 image_list_indir = []
