@@ -18,6 +18,7 @@ from skimage.transform import resize
 from skimage import img_as_ubyte
 
 from cntk import load_model
+from cfg import db_image_dir, proc_image_dir, data_dir, typedict_3_file, train_dir
 
 user='picturio'
 imgSize=32
@@ -25,13 +26,10 @@ num_classes  = 16
 
 write_misc=False
 
-data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-db_image_dir=os.path.join(data_dir,'db_images')
-proc_image_dir=os.path.join(data_dir,'processed_images')
 
-typedict_file=os.path.join(db_image_dir,'TypeDict_3.csv')
+
 type_dict={}
-reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
+reader =csv.DictReader(open(typedict_3_file, 'rt'), delimiter=';')
 for row in reader:
     type_dict[row['type']]=row['label']
 
@@ -42,11 +40,9 @@ user='picturio'
 output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 #output_base_dir=r'd:\DATA\WaterScope'
 
-train_dir=os.path.join(output_base_dir,'Training')
 
 model_file=os.path.join(train_dir,'cnn_model_taxon.dnn')
 
-train_dir=os.path.join(output_base_dir,'Training')
 image_list_file=os.path.join(train_dir,'images_test.csv')
 
 

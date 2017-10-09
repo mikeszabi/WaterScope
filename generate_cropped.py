@@ -8,29 +8,27 @@ Created on Sun Jun 25 17:48:12 2017
 import os
 import glob
 import csv
-
-
 from PIL import Image
-
 import pandas as pd
-import numpy as np
-
-import crop
-from cfg import *
-
+import classifications
+from cfg import db_image_dir,data_dir,proc_image_dir,included_extensions
 
 
 db_file=os.path.join(db_image_dir,'Database.csv')
+# cropped results are saved here
 save_dir=os.path.join(data_dir,'tmp')
-
+# crop-original map
 crop_map_file=os.path.join(db_image_dir,'crop_map.csv')
 
-#included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
-
+#==============================================================================
+# Read database to dataframe
+#==============================================================================
 df = pd.read_csv(db_file,delimiter=';')
-
 qualities=df['Class quality']
 
+#==============================================================================
+# 
+#==============================================================================
 df_filtered=df
 # filter df
 #df_filtered=df[(df['Class quality']=='highclass') | (df['Class quality']=='unclassified')]
@@ -40,7 +38,7 @@ df_filtered=df
 
 # create image list
 image_list_indir = []
-for ext in included_extenstions:
+for ext in included_extensions:
     image_list_indir.extend(glob.glob(os.path.join(db_image_dir, ext)))
 
 crop_map={}
@@ -55,11 +53,7 @@ for i, image_file in enumerate(image_list_indir):
         category=label['Class name'].values[0]
         #qual=label['Class quality'].values[0]
         
-        
-        img = Image.open(image_file)
-        im = np.asarray(img,dtype=np.uint8)
-        img_square=crop.crop(img,
-                             save_file=os.path.join(save_dir,os.path.basename(image_file)),
+        img_square=classifications.create_image(image_file,cropped=True,save_file=os.path.join(save_dir,os.path.basename(image_file)),
                              category=category)
         
         if img_square:

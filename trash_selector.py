@@ -36,7 +36,7 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 #output_base_dir=r'd:\DATA\WaterScope'
 
 
-model_file=os.path.join(r'.\model','cnn_model_binary.dnn')
+model_file=os.path.join(r'.\model','cnn_model_trash.dnn')
 cnn=classifications.cnn_classification(model_file)
 
 

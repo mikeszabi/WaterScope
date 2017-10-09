@@ -8,7 +8,7 @@ Created on Thu Aug 24 11:23:32 2017
 import os
 
 trainRatio=0.75
-included_extenstions = ['*.jpg', '*.bmp', '*.png', '*.gif']
+included_extensions = ['*.jpg', '*.bmp', '*.png', '*.gif']
 
 
 #user='SzMike'

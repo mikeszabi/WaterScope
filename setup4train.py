@@ -24,7 +24,7 @@ from collections import Counter
 import random
 import math
 import os
-from cfg import *
+from cfg import included_extensions, proc_image_dir, typedict_2_file, aliases_file, typedict_3_file, trainRatio, train_image_list_file, test_image_list_file
 
 #import pandas as pd
 #import numpy as np
@@ -61,7 +61,7 @@ def keysWithValue(aDict, target):
 #    type_dict[row['type']]=row['label']
 
 image_list_indir = []
-for ext in included_extenstions:
+for ext in included_extensions:
     image_list_indir.extend(glob.glob(os.path.join(proc_image_dir, ext)))
 
 

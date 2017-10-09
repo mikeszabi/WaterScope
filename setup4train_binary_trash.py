@@ -25,7 +25,7 @@ import random
 import math
 import pandas as pd
 import os
-from cfg import *
+from cfg_binary import *
 
 #import pandas as pd
 #import numpy as np

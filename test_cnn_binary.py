@@ -16,7 +16,7 @@ import skimage.io as io
 io.use_plugin('pil') # Use only the capability of PIL
 from skimage.transform import resize
 from skimage import img_as_ubyte
-from cfg import *
+from cfg_binary import *
 
 from cntk import load_model
 
@@ -36,7 +36,7 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 
 train_dir=os.path.join(output_base_dir,'Training')
 
-model_file=os.path.join(train_dir,'cnn_model_binary.dnn')
+model_file=os.path.join(train_dir,'cnn_model_trash.dnn')
 
 train_dir=os.path.join(output_base_dir,'Training')
 image_list_file=os.path.join(train_dir,'images_test_binary.csv')
@@ -156,6 +156,7 @@ recall=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fn[i]) for i in 
 fscore=(np.square(beta)+1)*precision*recall/(np.square(beta)*precision+recall)
 
 ##
+df_res[['predicted_label']] = df_res[['predicted_label']].apply(pd.to_numeric)
 
 dd=df_res.groupby('orig_quality')
 q_qual=dd.agg([np.mean,len])

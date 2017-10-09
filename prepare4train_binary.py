@@ -26,7 +26,7 @@ io.use_plugin('pil') # Use only the capability of PIL
 from skimage.transform import resize
 from skimage import img_as_ubyte
 from PIL import Image
-from cfg import *
+from cfg_binary import *
 
 #%matplotlib inline
 

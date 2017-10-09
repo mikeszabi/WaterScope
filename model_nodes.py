@@ -12,7 +12,13 @@ Created on Sun Jan  8 19:39:49 2017
 # ==============================================================================
 
 from __future__ import print_function
-from cntk import load_model
+import cntk
+cntk.__version__
+from cntk.device import all_devices, gpu
+all_devices()
+gpu(0)
+
+from cntk import load_model, combine
 from cntk.logging.graph import get_node_outputs
 
 
@@ -34,10 +40,16 @@ def dfs_walk(node, visited):
 #####################################################
 #####################################################
 
-model_file=r'c:\Users\picturio\Documents\Projects\WISH\models\IMAGENET\AlexNetBS.model'
+model_file=r'C:\Users\picturio\Documents\Projects\WaterScope\model\cnn_model_binary.dnn'
 
-dfs_walk(z, set())
+pred=load_model(model_file)
+
+dfs_walk(pred, set())
     # use this to print all node names of the model (and knowledge of the model to pick the correct one)
 
-node_outputs = get_node_outputs(load_model(model_file))
+node_outputs = get_node_outputs(pred)
 for out in node_outputs: print("{0} {1}".format(out.name, out.shape))
+
+node_name='Softmax522_Output_0'
+node_in_graph = pred.find_by_name(node_name)
+output_nodes  = combine([node_in_graph.owner])

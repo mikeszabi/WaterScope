@@ -26,7 +26,7 @@ io.use_plugin('pil') # Use only the capability of PIL
 from skimage.transform import resize
 from skimage import img_as_ubyte
 from PIL import Image
-from cfg import *
+from cfg import train_dir
 
 #%matplotlib inline
 
@@ -185,5 +185,5 @@ saveTestImages(test_image_list_file,train_dir)
 print ('Done.')
 
 # enrich!
-train_map=balanceMap(train_map_o,min_count=200, max_count=1000)
-test_map=balanceMap(test_map_o,min_count=50, max_count=250)
+train_map=balanceMap(train_map_o,min_count=300, max_count=6000)
+test_map=balanceMap(test_map_o,min_count=100, max_count=2000)

@@ -8,18 +8,17 @@ Created on Tue Jun 27 07:54:05 2017
 import glob
 
 import warnings
-import csv
 import pandas as pd
 import os
+from cntk import load_model
 
 import numpy as np
 import skimage.io as io
 io.use_plugin('pil') # Use only the capability of PIL
 from skimage.transform import resize
 from skimage import img_as_ubyte
-from cfg import *
+from cfg_binary import *
 
-#from cntk import load_model
 
 #import classifications
 
@@ -37,8 +36,8 @@ output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 #train_dir=os.path.join(output_base_dir,'Training')
 #image_list_file=os.path.join(train_dir,'images_test_binary.csv')
 
-#model_file=os.path.join(train_dir,'cnn_model_binary.dnn')
-model_file=os.path.join(r'.\model','cnn_model_binary.dnn')
+model_file=os.path.join(train_dir,'cnn_model_trash.dnn')
+#model_file=os.path.join(r'.\model','cnn_model_trash.dnn')
 
 df_db = pd.read_csv(db_file,delimiter=';')
 
@@ -102,14 +101,12 @@ for i, image_file in enumerate(image_list_indir):
 
 
 
-
+df_res[['predicted_label']] = df_res[['predicted_label']].apply(pd.to_numeric)
 ##
 
-dd=df_res.groupby('orig_quality')
-q_qual=dd.agg([np.mean,len])
+q_qual=df_res.groupby('orig_quality')['predicted_label'].agg([np.mean,len])
 #q_qual=dd.describe().loc[['count','mean']]
 print(q_qual)
-dd=df_res.groupby('orig_category')
-q_cat=dd.agg([np.mean,len])
+q_cat=df_res.groupby('orig_category').agg([np.mean,len])
 print(q_cat)
 

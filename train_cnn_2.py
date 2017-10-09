@@ -76,8 +76,8 @@ reader_test  = create_reader(test_map, data_mean_file, False)
 #==============================================================================
 # SET parameters
 #==============================================================================
-max_epochs=750
-model_func=create_basic_model
+max_epochs=500
+model_func=create_advanced_model
 
 
 #==============================================================================
@@ -102,7 +102,7 @@ ce = cross_entropy_with_softmax(z, label_var)
 pe = classification_error(z, label_var)
 
 # training config
-epoch_size     = 24000
+epoch_size     = 120000
 minibatch_size = 64
 
 # Set training parameters
@@ -162,7 +162,7 @@ for epoch in range(max_epochs):       # loop over epochs
 #
 # Evaluation action
 #
-epoch_size     = 8000
+epoch_size     = 40000
 minibatch_size = 32
 
 # process minibatches and evaluate the model
@@ -222,4 +222,4 @@ plt.show()
 
 pred=softmax(z)
 
-pred.save_model(model_file)
+pred.save(model_file)
