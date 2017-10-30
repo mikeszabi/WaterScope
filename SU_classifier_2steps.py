@@ -6,13 +6,15 @@ Created on Mon Aug 28 19:59:11 2017
 """
 
 import tkinter as tk
+from tkinter.filedialog import askdirectory
 import csv
 import time
 import os
 import shutil
 import xml.etree.ElementTree as ET
-from file_helper import images2process_list_in_depth, check_folder
+from src_tools.file_helper import imagelist_in_depth, images2process_list_in_depth, check_folder
 import classifications
+import pandas as pd
 
 #import sys
 #import logging
@@ -78,10 +80,10 @@ class Application(tk.Frame):
         self.cnn_2=classifications.cnn_classification(self.params.files['model_taxon'])
         print('load model '+self.params.files['model_taxon'])
         
-        # check result folder
-        check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification']),create=True)
-        check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification'],self.params.dirs['results']),create=True)
-        print('result folders are checked and created')
+#        # check result folder
+#        check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification']),create=True)
+#        check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification'],self.params.dirs['results']),create=True)
+#        print('result folders are checked and created')
 
      
     def createWidgets(self)   :        
@@ -102,6 +104,9 @@ class Application(tk.Frame):
         self.date_entry.pack(fill=tk.X, side=tk.BOTTOM)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
         
+        test_button = tk.Button(separator, text="TEST", command=self.test, width=10)
+        test_button.pack(side=tk.RIGHT)
+        
         start_button = tk.Button(separator, text="START", command=self.start, width=10)
         start_button.pack(side=tk.LEFT)
         
@@ -115,11 +120,27 @@ class Application(tk.Frame):
 
         #self.onUpdate()
         
+    def test(self):
+        if not self.running:
+            self.running=False
+            self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'test processing\n')
+            self.text.see(tk.END)
+            self.onTest()
+        
     def start(self):
         if not self.running:
             self.running=True
             self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'start processing\n')
             self.text.see(tk.END)
+            # check and create result folder
+            check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification']),create=True)
+            if not check_folder(folder=os.path.join(self.params.dirs['root'],self.params.dirs['classification'],self.params.dirs['results']),create=True):
+                self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'results folder is created\n')
+                self.text.see(tk.END)
+                print('result folders are checked and created')
+            else:
+                self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'results folder exists\n')
+                self.text.see(tk.END)
             self.onUpdate()
 
     def stop(self):
@@ -132,62 +153,108 @@ class Application(tk.Frame):
         self.text.delete('1.0', tk.END)
         self.date_entry.delete(0, tk.END)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
-        
+     
+    def onTest(self):
+        test_dir=askdirectory()
+        self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'processing: '+test_dir+'\n')
+        self.text.see(tk.END)
+#       measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
+        # get list of images to process
+        df_images2process=images2process_list_in_depth(test_dir,file2check1=[],file2check2=['dummy'],level=1)
+        if not df_images2process.empty:
+            df_images_processed=self.process_measure(df_images2process)  
+            print(df_images_processed)
+            
+        # write to csv
+        df_images_processed.to_csv(os.path.join(test_dir,'classification_result.csv'))
+            
+        self.date_entry.delete(0, tk.END)
+        self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
+             
     def onUpdate(self):
         measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
         # get list of images to process
-        images2process_list_indir=images2process_list_in_depth(measure_dir,
+        df_images2process=images2process_list_in_depth(measure_dir,
                                                                file2check1=[self.params.files['control']],
                                                                file2check2=[self.params.files['measure']],
                                                                level=3)
-        if images2process_list_indir:
-            self.process(images2process_list_indir)      
+        if not df_images2process.empty:
+            df_images_processed=self.process_measure(df_images2process)  
+            self.create_output(df_images_processed)
             
+            # ToDo: add diagnostics: processing of N images took T secs.
+            self.text.insert(tk.END, str(df_images_processed.shape[0])+' images were processed\n')
+            self.text.see(tk.END)
+        
         self.date_entry.delete(0, tk.END)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
              
         if self.running:
             self.after(1000,self.onUpdate)
+    
+    def process_oneimage(self,image_file):
+        im = classifications.create_image(image_file,cropped=False)
+        predicted_label, prob_trash = self.cnn_1.classify(im)
+        if predicted_label==0:
+            # TRASH goes to Recycle bin
+            predicted_type=keysWithValue(self.params.type_dict_trash,str(predicted_label))[0]
+            prob_taxon=0 # use np.NaN instead
+            self.text.insert(tk.END, 'TRASH model result : '+'type : '+predicted_type+' ; prob : '+str(prob_trash)+'\n')
+            self.text.see(tk.END)
+        else:
+            # NOT TRASH
+            im = classifications.create_image(image_file,cropped=True)
+            predicted_label, prob_taxon = self.cnn_2.classify(im)
+            predicted_type=keysWithValue(self.params.type_dict_taxon,str(predicted_label))[0]
+            self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob_taxon)+'\n')
+            self.text.see(tk.END)
             
-    def process(self,images2process_list_indir):
+        return predicted_type, prob_trash, prob_taxon
+            
+    def process_measure(self,df_images2process):
+        df_images_processed=df_images2process.copy()
+        df_images_processed['predicted_type']=None
+        df_images_processed['prob_trash']=None
+        df_images_processed['prob_taxon']=None
+        for index, fo in df_images2process.iterrows():
+           
+            self.text.insert(tk.END, 'processing : '+fo['image_file']+'\n')
+            
+            image_fullfile=os.path.join(fo['root'],fo['image_file'])
+            
+            predicted_type, prob_trash, prob_taxon=self.process_oneimage(image_fullfile)
+            
+            df_images_processed['predicted_type'][index]=predicted_type
+            df_images_processed['prob_trash'][index]=prob_trash
+            df_images_processed['prob_taxon'][index]=prob_taxon
+                        
+        return df_images_processed
+        
+    def create_output(self,df_images_processed):
+
         measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
-        for fo in images2process_list_indir:
-            cur_dir=os.path.join(measure_dir,fo[0],fo[1])
+        folders=df_images_processed['dir2'].unique()
+        for fo in folders:
+            df_temp=df_images_processed[df_images_processed['dir2']==fo]
+            cur_dir=os.path.join(measure_dir,df_temp['dir1'][0],fo)
             self.text.insert(tk.END, 'visiting : '+cur_dir+'\n')
+
             res_folder1=os.path.join(self.params.dirs['root'],self.params.dirs['classification'],
-                                self.params.dirs['results'],fo[0])
+                                self.params.dirs['results'],df_temp['dir1'][0])
             check_folder(folder=res_folder1,create=True)
-            res_folder=os.path.join(res_folder1,fo[1])
+            res_folder=os.path.join(res_folder1,fo)
             check_folder(folder=res_folder,create=True)
 
-            for image in fo[2]:
-                self.text.insert(tk.END, 'processing : '+image+'\n')
-                
-                image_file=os.path.join(measure_dir,fo[0],fo[1],image)
-                
-                im = classifications.create_image(image_file,cropped=False)
-                predicted_label, prob = self.cnn_1.classify(im)
-                if predicted_label==0:
-                    # TRASH goes to Recycle bin
-                    predicted_type=keysWithValue(self.params.type_dict_trash,str(predicted_label))[0]
-                    self.text.insert(tk.END, 'TRASH model result : '+'type : '+predicted_type+' ; prob : '+str(prob)+'\n')
-                    self.text.see(tk.END)
-                else:
-                    im = classifications.create_image(image_file,cropped=True)
-                    predicted_label, prob = self.cnn_2.classify(im)
-                    predicted_type=keysWithValue(self.params.type_dict_taxon,str(predicted_label))[0]
-                    self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob)+'\n')
-                    self.text.see(tk.END)
-                
-                class_folder=os.path.join(res_folder,predicted_type)
+            for index, df_image in df_temp.iterrows():
+                class_folder=os.path.join(res_folder,df_image['predicted_type'])
                 check_folder(folder=class_folder,create=True)
-                shutil.copy(image_file,os.path.join(class_folder,image))  
+                shutil.copy(os.path.join(df_image['root'],df_image['image_file']),
+                            os.path.join(class_folder,df_image['image_file']))  
                 
-                  
-  
             file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
+            # ToDo: fill up MeasureSum with content
             file.close()
-            
+#            
 
 if __name__ == "__main__":
     
