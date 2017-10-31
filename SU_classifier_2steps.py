@@ -12,8 +12,9 @@ import time
 import os
 import shutil
 import xml.etree.ElementTree as ET
-from src_tools.file_helper import imagelist_in_depth, images2process_list_in_depth, check_folder
+from src_tools.file_helper import read_log, imagelist_in_depth, images2process_list_in_depth, check_folder
 import classifications
+from src_tools.results2xml import XMLWriter
 import pandas as pd
 
 #import sys
@@ -179,15 +180,19 @@ class Application(tk.Frame):
                                                                file2check2=[self.params.files['measure']],
                                                                level=3)
         if not df_images2process.empty:
+            t=time.time()
             df_images_processed=self.process_measure(df_images2process)  
             self.create_output(df_images_processed)
             
-            # ToDo: add diagnostics: processing of N images took T secs.
-            self.text.insert(tk.END, str(df_images_processed.shape[0])+' images were processed\n')
+            elapsed = time.time() - t
+            
+            self.text.insert(tk.END, str(df_images_processed.shape[0])+' images were processed in '+
+                                         str("{0:.2f}".format(elapsed))+' secs\n')
+            
             self.text.see(tk.END)
         
         self.date_entry.delete(0, tk.END)
-        self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
+        self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%H:%M:%S"))
              
         if self.running:
             self.after(1000,self.onUpdate)
@@ -233,27 +238,70 @@ class Application(tk.Frame):
     def create_output(self,df_images_processed):
 
         measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
-        folders=df_images_processed['dir2'].unique()
-        for fo in folders:
-            df_temp=df_images_processed[df_images_processed['dir2']==fo]
-            cur_dir=os.path.join(measure_dir,df_temp['dir1'][0],fo)
-            self.text.insert(tk.END, 'visiting : '+cur_dir+'\n')
-
-            res_folder1=os.path.join(self.params.dirs['root'],self.params.dirs['classification'],
-                                self.params.dirs['results'],df_temp['dir1'][0])
-            check_folder(folder=res_folder1,create=True)
-            res_folder=os.path.join(res_folder1,fo)
-            check_folder(folder=res_folder,create=True)
-
-            for index, df_image in df_temp.iterrows():
-                class_folder=os.path.join(res_folder,df_image['predicted_type'])
-                check_folder(folder=class_folder,create=True)
-                shutil.copy(os.path.join(df_image['root'],df_image['image_file']),
-                            os.path.join(class_folder,df_image['image_file']))  
+        date_folders=df_images_processed['dir1'].unique()
+        for dfo in date_folders:
+            measure_folders=df_images_processed['dir2'].unique()
+            for mfo in measure_folders:
+                # select items
+                df_temp=df_images_processed[(df_images_processed['dir1']==dfo) & 
+                                            (df_images_processed['dir2']==mfo)]
+ 
+                # Check and create folders
+                cur_dir=os.path.join(measure_dir,dfo,mfo)
+                self.text.insert(tk.END, 'visiting : '+cur_dir+'\n')
+    
+                res_folder1=os.path.join(self.params.dirs['root'],
+                                         self.params.dirs['classification'],
+                                         self.params.dirs['results'],dfo)
+                check_folder(folder=res_folder1,create=True)
+                res_folder=os.path.join(res_folder1,mfo)
+                check_folder(folder=res_folder,create=True)
+              
+                # Write to folders
+    
+                for index, df_image in df_temp.iterrows():
+                    class_folder=os.path.join(res_folder,df_image['predicted_type'])
+                    check_folder(folder=class_folder,create=True)
+                    shutil.copy(os.path.join(df_image['root'],df_image['image_file']),
+                                os.path.join(class_folder,df_image['image_file']))  
                 
-            file=open(os.path.join(cur_dir,'MeasureSum.xml'),'w')
-            # ToDo: fill up MeasureSum with content
-            file.close()
+                # Read log
+                log_file=os.path.join(measure_dir,dfo,mfo,self.params.files['control'])
+                log_dict=read_log(log_file)
+                
+                measured_volume=float(log_dict['Measured Volume'].split(' ')[0])
+                measure_datetime=log_dict['Sample DateTime'].split('\t')
+                measure_date=measure_datetime[0].replace('.','')
+                measure_time=measure_datetime[1].replace(':','')
+
+                if not (type(measure_time) == str):
+                    measure_time=time.strftime("%H%M")
+                    
+                if not (type(measure_date) == str):
+                    measure_date=time.strftime("%Y%m%d_%H%M")
+                
+                scaled=True
+                if not (measured_volume>0):
+                    scaled=False
+                
+                # Create XML            
+                cur_result = XMLWriter()
+                cur_result.addAllCount(df_temp.shape[0],False)
+                if scaled:
+                    cur_result.addAllCount(int(float(df_temp.shape[0])/measured_volume),True)
+                    cur_result.addMeasuredVolume(measured_volume)
+  
+                taxons=df_temp.predicted_type.unique()
+                for taxon in taxons:
+                    count=df_temp.predicted_type.value_counts()[taxon]
+                    cur_result.addTaxonStat(taxon,int(count),False)
+                    if scaled:
+                        cur_result.addTaxonStat(taxon,int(float(count)/measured_volume),True)
+  
+                
+                xml_file=os.path.join(measure_dir,dfo,mfo,'MeasureSum_'+measure_date+'_'+measure_time+'.xml')
+                cur_result.save(targetFile=xml_file)
+
 #            
 
 if __name__ == "__main__":

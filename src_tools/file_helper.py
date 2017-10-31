@@ -56,7 +56,12 @@ def images2process_list_in_depth(measure_dir,file2check1=['settings-settings.xml
     
     return df_images2process
 
+def read_log(file_name):
+    # log is "=" separated
+    log_df=pd.read_csv(file_name,sep='=')
+    log_dict={row[0][0:-1]:row[1][1:] for i, row in log_df.iterrows()}
 
+    return log_dict
 
 def dirlist_onelevel(cur_dir,level=1):
     dir_list = [f.path.split('\\')[-1] for f in os.scandir(cur_dir) if f.is_dir() ] 

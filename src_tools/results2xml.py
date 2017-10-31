@@ -10,23 +10,24 @@ Created on Thu Feb  2 11:21:47 2017
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 from lxml import etree
+ 
 
 class XMLWriter:
 
     def __init__(self, author='SU'):
-        self.top = None
         self.top = Element('measure')
+        self.measuredvolume = SubElement(self.top,'measuredvolume_in_liter')
 
         self.results = SubElement(self.top, 'results')
 
         self.scaledresults = SubElement(self.top, 'scaledresults')
         
+        self.allobjectnumber_results = SubElement(self.results, 'allobjectnumber')
+        self.allobjectnumber_scaledresults = SubElement(self.scaledresults, 'allobjectnumber')
+                
         self.objectsbytype_results = SubElement(self.results, 'objectsbytype')
         self.objectsbytype_scaledresults = SubElement(self.scaledresults, 'objectsbytype')
 
-        self.allobjectnumber_results = SubElement(self.objectsbytype_results, 'allobjectnumber')
-        self.allobjectnumber_scaledresult = SubElement(self.objectsbytype_scaledresults, 'allobjectnumber')
-        
     def prettify(self, elem):
         """
             Return a pretty-printed XML string for the Element.
@@ -35,8 +36,11 @@ class XMLWriter:
         root = etree.fromstring(rough_string)
         return etree.tostring(root, pretty_print=True)
 
-       
-    def addTaxon(self, taxon_name, count, scaled=False):
+    def addMeasuredVolume(self, measured_volume):
+        assert isinstance(measured_volume,float), "Not valid measured_volume"
+        self.measuredvolume.text=str(measured_volume)
+        
+    def addTaxonStat(self, taxon_name, count, scaled=False):
         assert isinstance(taxon_name,str), "Not valid taxon name"
         assert isinstance(count,int), "Not valid taxon count"
         
@@ -103,6 +107,7 @@ tempParseReader = XMLReader(filepath)
 # Test
 filepath=r'd:\Projects\WaterScope\work_0\Measurement\20170712\alma.xml'
 tmp = XMLWriter()
-tmp.addTaxon('alma.korte.barack',10,False)
+tmp.addTaxonStat('alma.korte.barack',10,False)
+tmp.addMeasuredVolume(0.001)
 tmp.save(targetFile=filepath)
 """
