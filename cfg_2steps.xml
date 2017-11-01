@@ -14,7 +14,7 @@
         <measure>(Measure).*(.xml)</measure>
         <model_trash>cnn_model_trash.dnn</model_trash>
         <model_taxon>cnn_model_taxon.dnn</model_taxon>
-        <typedict>TypeDict_3.csv</typedict>
+        <typedict>TypeDict_TaxonClasses.csv</typedict>
     </files>
     <processing>       
     	 <delete_files>false</delete_files>

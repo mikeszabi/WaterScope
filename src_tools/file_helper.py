@@ -34,7 +34,7 @@ def images2process_list_in_depth(measure_dir,file2check1=['settings-settings.xml
     included_extenstions = ['png']
     for root, dirs, files in walklevel(measure_dir, level=level):
         dir_struct=root.split('\\')
-        if not dirs and len(dir_struct)>level-1:
+        if len(dir_struct)==measure_dir.count(os.path.sep)+level:
              # root: ..\\Measure\\DATE\\MeasureID
             if files:
                 # not empty dir

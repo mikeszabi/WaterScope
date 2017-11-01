@@ -12,10 +12,9 @@ import time
 import os
 import shutil
 import xml.etree.ElementTree as ET
-from src_tools.file_helper import read_log, imagelist_in_depth, images2process_list_in_depth, check_folder
+from src_tools.file_helper import read_log, images2process_list_in_depth, check_folder
 import classifications
 from src_tools.results2xml import XMLWriter
-import pandas as pd
 
 #import sys
 #import logging
@@ -24,8 +23,8 @@ import pandas as pd
 #log_file='progress.log'
 #logging.basicConfig(filename=log_file,level=logging.DEBUG)
 
-def keysWithValue(aDict, target):
-    return sorted(key for key, value in aDict.items() if target == value)
+#def keysWithValue(aDict, target):
+#    return sorted(key for key, value in aDict.items() if target == value)
 
 class params:
     
@@ -49,14 +48,14 @@ class params:
         
         self.type_dict_taxon=self.get_typedict(self.files['typedict'])
         
-        self.type_dict_trash={'Recycle bin':'0','Object':'1'}
+        self.type_dict_trash={'0':'Others.Another.nemCentrales','1':'Object'}
         
     def get_typedict(self,typedict_file):
         type_dict={}
         if os.path.isfile(typedict_file):
-            reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
+            reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=':')
             for row in reader:
-                type_dict[row['type']]=row['label']
+                type_dict[row['label']]=row['type']
             print('typeDict loaded')
         else:
             for i in range(100):
@@ -165,10 +164,12 @@ class Application(tk.Frame):
         if not df_images2process.empty:
             df_images_processed=self.process_measure(df_images2process)  
             print(df_images_processed)
-            
-        # write to csv
-        df_images_processed.to_csv(os.path.join(test_dir,'classification_result.csv'))
-            
+            self.date_entry.delete(0, tk.END)
+            self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'TEST directory is processed\n')
+             
+            # write to csv
+            df_images_processed.to_csv(os.path.join(test_dir,'classification_result.csv'))
+                
         self.date_entry.delete(0, tk.END)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
              
@@ -202,7 +203,7 @@ class Application(tk.Frame):
         predicted_label, prob_trash = self.cnn_1.classify(im)
         if predicted_label==0:
             # TRASH goes to Recycle bin
-            predicted_type=keysWithValue(self.params.type_dict_trash,str(predicted_label))[0]
+            predicted_type=self.params.type_dict_trash[str(predicted_label)]
             prob_taxon=0 # use np.NaN instead
             self.text.insert(tk.END, 'TRASH model result : '+'type : '+predicted_type+' ; prob : '+str(prob_trash)+'\n')
             self.text.see(tk.END)
@@ -210,7 +211,7 @@ class Application(tk.Frame):
             # NOT TRASH
             im = classifications.create_image(image_file,cropped=True)
             predicted_label, prob_taxon = self.cnn_2.classify(im)
-            predicted_type=keysWithValue(self.params.type_dict_taxon,str(predicted_label))[0]
+            predicted_type=self.params.type_dict_taxon[str(predicted_label)]
             self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob_taxon)+'\n')
             self.text.see(tk.END)
             
@@ -240,11 +241,11 @@ class Application(tk.Frame):
         measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
         date_folders=df_images_processed['dir1'].unique()
         for dfo in date_folders:
-            measure_folders=df_images_processed['dir2'].unique()
+            df_date=df_images_processed[df_images_processed['dir1']==dfo]
+            measure_folders=df_date['dir2'].unique()
             for mfo in measure_folders:
                 # select items
-                df_temp=df_images_processed[(df_images_processed['dir1']==dfo) & 
-                                            (df_images_processed['dir2']==mfo)]
+                df_measure=df_date[df_date['dir2']==mfo]
  
                 # Check and create folders
                 cur_dir=os.path.join(measure_dir,dfo,mfo)
@@ -259,7 +260,7 @@ class Application(tk.Frame):
               
                 # Write to folders
     
-                for index, df_image in df_temp.iterrows():
+                for index, df_image in df_measure.iterrows():
                     class_folder=os.path.join(res_folder,df_image['predicted_type'])
                     check_folder(folder=class_folder,create=True)
                     shutil.copy(os.path.join(df_image['root'],df_image['image_file']),
@@ -286,14 +287,14 @@ class Application(tk.Frame):
                 
                 # Create XML            
                 cur_result = XMLWriter()
-                cur_result.addAllCount(df_temp.shape[0],False)
+                cur_result.addAllCount(df_measure.shape[0],False)
                 if scaled:
-                    cur_result.addAllCount(int(float(df_temp.shape[0])/measured_volume),True)
+                    cur_result.addAllCount(int(float(df_measure.shape[0])/measured_volume),True)
                     cur_result.addMeasuredVolume(measured_volume)
   
-                taxons=df_temp.predicted_type.unique()
+                taxons=df_measure.predicted_type.unique()
                 for taxon in taxons:
-                    count=df_temp.predicted_type.value_counts()[taxon]
+                    count=df_measure.predicted_type.value_counts()[taxon]
                     cur_result.addTaxonStat(taxon,int(count),False)
                     if scaled:
                         cur_result.addTaxonStat(taxon,int(float(count)/measured_volume),True)

@@ -1,17 +1,13 @@
-alias:classes
-Scenedesmus:Acutodesmus,Desmodesmus,Scenedesmus
-Centrales:Centrales,Centrales_oldalrol
-Euglena:Euglena pisciformis,Euglena proxima,Trachelomonas
-Tetraedron:Tetraedron,Tetraedron caudatum,Tetraedron trigonum,Tetraedron minimum
-Monoraphidium:Monoraphidium egysejtes,Monoraphidium ketsejtes
-Green algae:Pediastrum,Coelastrum
-Cyanobacteria filaments straight:Cylindrospermopsis raciborskii,Aphanizomenon,Planktothrix,Anabaenopsis cunningtonii,Anabaena solitaria,Oscillatoria
-Cyanobacteria filaments curves:Anabaena circinalis,Anabaena elenkinii,Lyngbya contorta
-Pennales:Nitzschia acicularis,Nitzschia palea
-Microcystis:Microcystis,Cyanobacteria coenobia
-Recycle bin:Recycle bin,nem centrales
-Ankistrodesmus:Ankistrodesmus
-Aulacoseira:Aulacoseira
-Schroederia:Schroederia
-Tetrastrum:Tetrastrum
-ostoros:ostoros
+Others.Debris.Others:Ankistrodesmus,Euglena pisciformis,Euglena proxima,Trachelomonas,ostoros,Tetrastrum
+Algae.Chlorophyta.Scenedesmus:Acutodesmus,Desmodesmus,Scenedesmus
+Others.Debris.Others	Aulacoseira
+Bacteria.Cyanobacteria.Aphanizomenon_Cylindrospermopsis:Cylindrospermopsis,raciborskii,Aphanizomenon,Planktothrix,Anabaenopsis,cunningtonii,Anabaena,solitaria,Oscillatoria
+Bacteria.Cyanobacteria.Microcystis:Microcystis,Cyanobacteria,coenobia
+Algae.Bacillariophyta.Centrales:Centrales,Centrales_oldalrol
+Algae.Chlorophyta.Pediastrum:Pediastrum,Coelastrum
+Algae.Chlorophyta.Tetraedron_caudatum:Tetraedron,Tetraedron,caudatum,Tetraedron,
+Bacteria.Cyanobacteria.Anabaena_circianlis:Anabaena,circinalis,Anabaena,elenkinii,Lyngbya,contorta
+Algae.Bacillariophyta.Nitzschia,acicularis:Nitzschia,acicularis,Nitzschia,palea
+Algae.Chlorophyta.Schroederia:Schroederia
+Algae.Chlorophyta.Monoraphidium:Monoraphidium,egysejtes,Monoraphidium,ketsejtes
+Others.Another.nemCentrales:Recycle,bin,nem,centrales
