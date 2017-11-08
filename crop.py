@@ -29,7 +29,11 @@ import numpy as np
 
 
 def crop_edge(gray):
-    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.01, high_threshold=0.995, use_quantiles=True)
+    contr=gray.max()-gray.min()
+    high_tsh=max(0.1,contr*0.3)
+    low_tsh=max(0.005,contr*0.01)
+#    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.01, high_threshold=0.995, use_quantiles=True)
+    edges1 = feature.canny(gray, sigma=2, low_threshold=low_tsh, high_threshold=high_tsh, use_quantiles=False)
 
     edges2 = morphology.binary_dilation(edges1,morphology.disk(11))
  
@@ -41,7 +45,8 @@ def crop_edge(gray):
     areas = [prop.area for prop in props]    
     l = [prop.major_axis_length  for prop in props]  
     if areas:    
-        if max(l)>max(gray.shape[0],gray.shape[1])*0.1:
+        if max(l)>max(gray.shape[0],gray.shape[1])*0.2:
+            # ToDo: find area with largest edges1
             prop_large = props[np.argmax(areas)]       
             bb=prop_large.bbox
 
@@ -75,14 +80,18 @@ def get_pixelsize(img):
     label_img = measure.label(binary)
     regions = measure.regionprops(label_img)
 
-len(regions)==1
-for props in regions:
-   bb = props.bbox
-   length=bb[3]-bb[1]
+    length=np.NaN
+    if len(regions)==1:
+       bb = regions[0].bbox
+       length=bb[3]-bb[1]
+       
+    return length
    
 
 def crop(img,pad_rate=0.25,save_file='',category=''):
 
+    #length = get_pixelsize(img)
+    
     img_rgb=img.convert('RGB')     # if png
 #   img_rgb=img
     
@@ -91,20 +100,6 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     gray=rgb2gray(im)
     
     bb=crop_edge(gray)
-    
-#    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.15, high_threshold=0.25)
-#    #edges1 = feature.canny(gray, sigma=2)
-#    edges2 = morphology.binary_dilation(edges1,morphology.disk(5))
-#    
-#    label_im=measure.label(edges2)
-#    props = measure.regionprops(label_im)
-#    
-#    areas = [prop.area for prop in props]    
-#    if areas:       
-#        prop_large = props[np.argmax(areas)]       
-#        bb=prop_large.bbox
-#    else:
-#        bb=(0,0,gray.shape[0],gray.shape[1])
 #        
     dx=bb[2]-bb[0]
     dy=bb[3]-bb[1]
@@ -120,7 +115,7 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     if min(im_cropped.shape)>0:
         img_cropped = Image.fromarray(np.uint8(im_cropped))
         img_w, img_h = img_cropped.size
-        img_square=Image.new('RGBA', (max(img_cropped.size),max(img_cropped.size)), (0,0,0,0))
+        img_square=Image.new('RGBA', (max(img_cropped.size),max(img_cropped.size)), (255,255,255,255))
         bg_w, bg_h = img_square.size
         offset = (int(np.ceil((bg_w - img_w) / 2)), int(np.ceil((bg_h - img_h) / 2)))
         img_square.paste(img_cropped, offset)
@@ -129,8 +124,8 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
             fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 3))
             fig.suptitle(category)
         
-            ax1.imshow(im, cmap=plt.cm.gray)
-            ax1.axis('off')
+            ax1.imshow(im)
+            #ax1.axis('off')
        
             ax1.add_patch(patches.Rectangle(
                         (bb[1], bb[0]),   # (x,y)
@@ -138,8 +133,8 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
                             bb[2]-bb[0],       # height
                             fill=False))
             
-            ax2.imshow(im_cropped, cmap=plt.cm.gray)
-            ax2.axis('off')
+            ax2.imshow(np.asarray(img_square))
+            #ax2.axis('off')
             
             
             fig.savefig(save_file)
