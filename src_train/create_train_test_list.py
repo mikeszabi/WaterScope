@@ -5,7 +5,7 @@ Created on Sun Jun 25 13:48:16 2017
 @author: SzMike
 
 
-Creates train and test lists from the images
+Creates train and test lists from the images 
 Each class es used has to have enough obsercations (min_obs)
 """
 

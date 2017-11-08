@@ -25,8 +25,7 @@ def keysWithValue(aDict, target):
 def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category=''):
     img = Image.open(image_file)
     if cropped:
-        img = Image.open(image_file)
-        img_square=crop.crop(img,pad_rate=0.25,save_file='',category='')
+        img_square=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category)
     return img_square
 
 class cnn_classification:
