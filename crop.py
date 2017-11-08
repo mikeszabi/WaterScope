@@ -14,6 +14,7 @@ import skimage.io as io
 from skimage import feature
 from skimage import morphology
 from skimage import measure
+from skimage import filters
 
 io.use_plugin('pil') # Use only the capability of PIL
 #%matplotlib qt5
@@ -62,7 +63,23 @@ def crop_blob(gray):
     
     return bb
 
-    
+def get_pixelsize(img):
+    # 4th layer codes the pixelsize
+    im = np.asarray(img,dtype=np.uint8)
+
+    im_last=im[:,:,3]
+
+    thresh = filters.threshold_mean(im_last)
+    binary = im_last < thresh
+
+    label_img = measure.label(binary)
+    regions = measure.regionprops(label_img)
+
+len(regions)==1
+for props in regions:
+   bb = props.bbox
+   length=bb[3]-bb[1]
+   
 
 def crop(img,pad_rate=0.25,save_file='',category=''):
 

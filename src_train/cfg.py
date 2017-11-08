@@ -11,8 +11,8 @@ trainRatio=0.75
 included_extensions = ['*.jpg', '*.bmp', '*.png', '*.gif']
 
 
-#user='SzMike'
-user='picturio'
+user='SzMike'
+#user='picturio'
 data_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
 #data_dir=r'd:\DATA\WaterScope'
 

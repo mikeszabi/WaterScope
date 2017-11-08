@@ -9,11 +9,21 @@ import csv
 
 import pandas as pd
 import os
-import src_train.train_config as cfg
+from src_train.train_config import train_params
 import src_tools.file_helper as fh
+
+
+#data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+data_dir=os.path.join(r'E:\OneDrive\WaterScope')
+
+
+cfg=train_params(data_dir)
 
 image_list=fh.imagelist_in_depth(cfg.imagedb_dir,level=2)
 
+"""
+Class names from folder names
+"""
 file_names=[f for f in image_list]
 class_names=[os.path.dirname(f).split('\\')[-1] for f in image_list]
 df_db = pd.DataFrame(data={'Filename':file_names,'Class name':class_names})
