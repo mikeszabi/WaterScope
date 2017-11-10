@@ -51,7 +51,7 @@ def create_advanced_model(input, out_dims):
         model = Sequential([
             For(range(2), lambda i: [  # lambda with one parameter
                 Convolution((3,3), [32,64][i], pad=True),  # depth depends on i
-                Convolution((5,5), [32,64][i], pad=True),
+                Convolution((7,7), [32,64][i], pad=True),
                 Convolution((9,9), [32,64][i], pad=True),            
                 MaxPooling((3,3), strides=(2,2))
             ]),

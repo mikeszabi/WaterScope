@@ -26,37 +26,24 @@ io.use_plugin('pil') # Use only the capability of PIL
 from skimage.transform import resize
 from skimage import img_as_ubyte
 from PIL import Image
-from cfg import train_dir
-
+from src_train.train_config import train_params
 #%matplotlib inline
 
-user='picturio'
-output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-#output_base_dir=r'd:\DATA\WaterScope'
+data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+cfg=train_params(data_dir,crop=True,training_id='20171110')
 
 
-# Config matplotlib for inline plotting
-
-imgSize=32
+imgSize=64
 nCh=3
 numFeature = imgSize * imgSize * 3
-#num_classes  = 33
-#
-#label_base=np.zeros(num_classes)
 
 
-train_image_list_file=os.path.join(train_dir,'images_train.csv')
-test_image_list_file=os.path.join(train_dir,'images_test.csv')
-
-#train_img_directory = os.path.join(train_dir,'Train')
-#test_img_directory = os.path.join(train_dir,'Test')
-
-train_map_o=os.path.join(train_dir,'train_map.txt')
-test_map_o=os.path.join(train_dir,'test_map.txt')
+train_map_o=os.path.join(cfg.train_dir,'train_map.txt')
+test_map_o=os.path.join(cfg.train_dir,'test_map.txt')
 
 #train_regr_labels=os.path.join(train_dir,'train_regrLabels.txt')
 
-data_mean_file=os.path.join(train_dir,'data_mean.xml')
+data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
 
 def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
@@ -178,12 +165,12 @@ def saveTestImages(filename, train_dir):
 
 
 print ('Converting train data to png images...')
-saveTrainImages(train_image_list_file,train_dir)
+saveTrainImages(cfg.train_image_list_file,cfg.train_dir)
 print ('Done.')
 print ('Converting test data to png images...')
-saveTestImages(test_image_list_file,train_dir)
+saveTestImages(cfg.test_image_list_file,cfg.train_dir)
 print ('Done.')
 
 # enrich!
-train_map=balanceMap(train_map_o,min_count=300, max_count=6000)
-test_map=balanceMap(test_map_o,min_count=100, max_count=2000)
+train_map=balanceMap(train_map_o,min_count=600, max_count=3000)
+test_map=balanceMap(test_map_o,min_count=200, max_count=1000)

@@ -46,6 +46,7 @@ def crop_edge(gray):
     l = [prop.major_axis_length  for prop in props]  
     if areas:    
         if max(l)>max(gray.shape[0],gray.shape[1])*0.2:
+            # ToDo : set minsize as absolute value
             # ToDo: find area with largest edges1
             prop_large = props[np.argmax(areas)]       
             bb=prop_large.bbox
@@ -103,17 +104,18 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
 #        
     dx=bb[2]-bb[0]
     dy=bb[3]-bb[1]
-    dmax=int(max((0.5+pad_rate)*dx,(0.5+pad_rate)*dy))
+    rmax=int(max((0.5+pad_rate)*dx,(0.5+pad_rate)*dy))
     o=(int(np.ceil((bb[0]+bb[2])/2)),int(np.ceil((bb[1]+bb[3])/2)))
-    bb_square=(max(o[0]-dmax,0),
-               max(o[1]-dmax,0),
-               min(o[0]+dmax,gray.shape[0]),
-               min(o[1]+dmax,gray.shape[1]))
+    bb_square=(max(o[0]-rmax,0),
+               max(o[1]-rmax,0),
+               min(o[0]+rmax,gray.shape[0]),
+               min(o[1]+rmax,gray.shape[1]))
         
     im_cropped = im[bb_square[0]:bb_square[2], bb_square[1]:bb_square[3],:]
         
     if min(im_cropped.shape)>0:
         img_cropped = Image.fromarray(np.uint8(im_cropped))
+        # ToDo: Set img_square to have always the same image size: (200,200) ? 
         img_w, img_h = img_cropped.size
         img_square=Image.new('RGBA', (max(img_cropped.size),max(img_cropped.size)), (255,255,255,255))
         bg_w, bg_h = img_square.size
