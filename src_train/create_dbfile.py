@@ -4,6 +4,7 @@ Created on Tue Nov  7 20:21:20 2017
 
 @author: Szabolcs Mike
 Create image db file
+Uses class_map
 """
 
 

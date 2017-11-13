@@ -10,23 +10,23 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-#from cntk.device import gpu, set_default_device
-from cntk import cross_entropy_with_softmax, classification_error, input_variable, softmax, element_times
+#from cntk.device import try_set_default_device, gpu
+from cntk import cross_entropy_with_softmax, classification_error, input_variable, softmax, element_times, reduce_mean
 from cntk.io import MinibatchSource, ImageDeserializer, StreamDef, StreamDefs, transforms
 from cntk import Trainer
 from cntk import momentum_sgd, learning_rate_schedule, UnitType, momentum_as_time_constant_schedule
-from cntk.logging import log_number_of_parameters, ProgressPrinter
+from cntk.logging import log_number_of_parameters, ProgressPrinter, TensorBoardProgressWriter
 
 
 from src_train.model_functions import create_basic_model, create_advanced_model
 from src_train.train_config import train_params
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171110')
-
+cfg=train_params(data_dir,crop=True,training_id='20171112')
 
 model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
 model_temp_file=os.path.join(cfg.train_dir,'cnn_model_temp.dnn')
+train_log_file=os.path.join(cfg.train_log_dir,'progress_log.txt')
 
 train_map=os.path.join(cfg.train_dir,'train_map.txt')
 test_map=os.path.join(cfg.train_dir,'test_map.txt')
@@ -59,10 +59,11 @@ def create_reader(map_file, mean_file, train):
         transforms.mean(mean_file)
     ]
     # deserializer
-    return MinibatchSource(ImageDeserializer(map_file, StreamDefs(
+    image_source=ImageDeserializer(map_file, StreamDefs(
         features = StreamDef(field='image', transforms=trs), # first column in map file is referred to as 'image'
         labels   = StreamDef(field='label', shape=num_classes)      # and second as 'label'
-    )))
+    ))
+    return MinibatchSource(image_source)
     
 #
 # Train and evaluate the network.
@@ -75,8 +76,8 @@ reader_test  = create_reader(test_map, data_mean_file, False)
 #==============================================================================
 # SET parameters
 #==============================================================================
-max_epochs=300
-model_func=create_advanced_model
+max_epochs=100
+model_func=create_basic_model
 
 
 #==============================================================================
@@ -102,7 +103,7 @@ pe = classification_error(z, label_var)
 
 # training config
 epoch_size     = 48000
-minibatch_size = 64
+minibatch_size = 128
 
 # Set training parameters
 lr_per_minibatch       = learning_rate_schedule([0.01]*10 + [0.003]*10 + [0.001],  UnitType.minibatch, epoch_size)
@@ -110,15 +111,20 @@ momentum_time_constant = momentum_as_time_constant_schedule(-minibatch_size/np.l
 l2_reg_weight          = 0.001
 
 # trainer objectS
-progress_printer = ProgressPrinter(0)
+progress_writers = [ProgressPrinter(tag='Training', num_epochs=max_epochs)]
+#progress_writers = [ProgressPrinter(tag='Training', log_to_file=train_log_file, num_epochs=max_epochs, gen_heartbeat=True)]
 
+if cfg.train_log_dir is not None:
+    tensorboard_writer = TensorBoardProgressWriter(freq=10, log_dir=cfg.train_log_dir, model=z)
+    progress_writers.append(tensorboard_writer)
+    
 learner     = momentum_sgd(z.parameters, 
                            lr = lr_per_minibatch, momentum = momentum_time_constant, 
                            l2_regularization_weight=l2_reg_weight)
 
 
 ######### RESTORE TRAINER IF NEEDED
-trainer     = Trainer(z, (ce, pe), [learner], [progress_printer])
+trainer     = Trainer(z, (ce, pe), learner, progress_writers)
 # trainer.restore_from_checkpoint(model_temp_file)
 
 # define mapping from reader streams to network inputs
@@ -128,7 +134,6 @@ input_map = {
 }
 
 log_number_of_parameters(z) ; print()
-#progress_printer = ProgressPrinter(tag='Training')
 
 # perform model training
 batch_index = 0
@@ -148,13 +153,17 @@ for epoch in range(max_epochs):       # loop over epochs
         plot_data['loss'].append(trainer.previous_minibatch_loss_average)
         plot_data['error'].append(trainer.previous_minibatch_evaluation_average)
         
-        progress_printer.update_with_trainer(trainer, with_metric=True) # log progress
+        progress_writers[0].update_with_trainer(trainer, with_metric=True) # log progress
         batch_index += 1
         ev_avg+=trainer.previous_minibatch_evaluation_average
         i_count+=1
 #    if ev_avg/i_count < 0.02:
 #        break
-    progress_printer.epoch_summary(with_metric=True)
+    progress_writers[0].epoch_summary(with_metric=True)
+#    trainer.summarize_training_progress()
+#    if tensorboard_writer:
+#        for parameter in z.parameters:
+#            tensorboard_writer.write_value(parameter.uid + "/mean", reduce_mean(parameter).eval(), epoch)
 #    print(epoch,' : ',ev_avg/i_count)
     trainer.save_checkpoint(model_temp_file)
     
@@ -162,7 +171,7 @@ for epoch in range(max_epochs):       # loop over epochs
 # Evaluation action
 #
 epoch_size     = 16000
-minibatch_size = 32
+minibatch_size = 64
 
 # process minibatches and evaluate the model
 metric_numer    = 0

@@ -40,7 +40,7 @@ def dfs_walk(node, visited):
 #####################################################
 #####################################################
 
-model_file=r'C:\Users\picturio\Documents\Projects\WaterScope\model\cnn_model_binary.dnn'
+model_file=r'c:\Users\picturio\OneDrive\WaterScope\Training_20171110\cnn_model_14_3_20171112.dnn'
 
 pred=load_model(model_file)
 

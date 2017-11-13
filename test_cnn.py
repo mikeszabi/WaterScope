@@ -3,47 +3,49 @@
 Created on Tue Jun 27 07:54:05 2017
 
 @author: picturio
+
+Test result on test list
+
 """
 
-
+from shutil import copyfile
 import warnings
 import csv
 import pandas as pd
 import os
-
+from collections import OrderedDict
 import numpy as np
 import skimage.io as io
 io.use_plugin('pil') # Use only the capability of PIL
 from skimage.transform import resize
 from skimage import img_as_ubyte
-
 from cntk import load_model
-from cfg import db_image_dir, proc_image_dir, data_dir, typedict_3_file, train_dir
 
+from src_train.train_config import train_params
+
+
+data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+cfg=train_params(data_dir,crop=True,training_id='20171112')
+typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
+model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
+
+
+model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
 user='picturio'
-imgSize=32
-num_classes  = 16
+imgSize=64
+num_classes  = 32
 
 write_misc=False
 
 
 
 type_dict={}
-reader =csv.DictReader(open(typedict_3_file, 'rt'), delimiter=';')
+reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
 for row in reader:
-    type_dict[row['type']]=row['label']
+    type_dict[row['label']]=row['type']
 
-sorted_classes= [i[0] for i in sorted(type_dict.items(), key=lambda x:x[0].upper())]
+sorted_classes= OrderedDict(sorted(type_dict.items(), key=lambda x:x[0]))
 
-
-user='picturio'
-output_base_dir=os.path.join(r'C:\Users',user,'OneDrive\WaterScope')
-#output_base_dir=r'd:\DATA\WaterScope'
-
-
-model_file=os.path.join(train_dir,'cnn_model_taxon.dnn')
-
-image_list_file=os.path.join(train_dir,'images_test.csv')
 
 
 # LOAD MODEL
@@ -53,22 +55,16 @@ pred=load_model(model_file)
 image_mean   = 128
 
 
-def keysWithValue(aDict, target):
-    return sorted(key for key, value in aDict.items() if target == value)
-
-df = pd.read_csv(image_list_file,delimiter=';')
+df_test = pd.read_csv(cfg.test_image_list_file,delimiter=';')
 samples = {}
 contingency_table=np.zeros((num_classes,num_classes))
 misclassified=[]
-for i, im_name in enumerate(df['image']):
+for i, row in df_test.iterrows():
+    row['image']
 #    i=200
-    image_file=os.path.join(proc_image_dir,im_name)    
-#    image_file=r'C:\Users\SzMike\OneDrive\WBC\DATA\Training\Train\ne_50.png'
+    image_file=row['image']   
 
-#    wbc_type='0'
-#    for bt in param.wbc_basic_types:
-#        if bt in df['category'][i]:
-    label=df['category'][i]
+    label=row['category']
 
     im=io.imread(image_file)
     with warnings.catch_warnings():
@@ -78,24 +74,18 @@ for i, im_name in enumerate(df['image']):
     rgb_image  -= image_mean
     bgr_image = rgb_image[..., [2, 1, 0]]
     pic = np.ascontiguousarray(np.rollaxis(bgr_image, 2))
-    
-#    rgb_image = np.asarray(Image.open(image_file), dtype=np.float32) - 128
-#    bgr_image = rgb_image[..., [2, 1, 0]]
-#    pic = np.ascontiguousarray(np.rollaxis(bgr_image, 2))
+
        
     result  = np.round(np.squeeze(pred.eval({pred.arguments[0]:[pic]}))*100)
     predicted_label=np.argmax(result)
     contingency_table[label,predicted_label]+=1
     # rows are actual labels, cols are predictions,                  
     if predicted_label  != label:
-        mis_item=[os.path.basename(im_name),
-        keysWithValue(type_dict,str(predicted_label)),
-        keysWithValue(type_dict,str(label))]
+        mis_item=[image_file,
+        type_dict[str(predicted_label)],
+        type_dict[str(label)]]
         misclassified.append(mis_item)
-#    print(df['wbc'][i])
-#    print(result)
-#    print(keysWithValue(param.wbc_basic_types,str(mr)))
-#    plt.imshow(im)
+
 #    
 
 cont_table=pd.DataFrame(data=contingency_table,    # values
@@ -105,11 +95,9 @@ cont_table=pd.DataFrame(data=contingency_table,    # values
 if write_misc:
     a=[i[1][0] for i in misclassified]
     for misc in misclassified:
-        image_file=os.path.join(proc_image_dir,misc[0])    
         save_file=os.path.join(data_dir,'misc',misc[1][0]+'___'+misc[0])
         # "predicted label"___"original label"
-        im=io.imread(image_file)
-        io.imsave(save_file,im)
+        copyfile(misc[0],save_file)
         print(misc)
     
 

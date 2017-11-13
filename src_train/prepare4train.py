@@ -30,7 +30,7 @@ from src_train.train_config import train_params
 #%matplotlib inline
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171110')
+cfg=train_params(data_dir,crop=True,training_id='20171112')
 
 
 imgSize=64
@@ -44,9 +44,6 @@ test_map_o=os.path.join(cfg.train_dir,'test_map.txt')
 #train_regr_labels=os.path.join(train_dir,'train_regrLabels.txt')
 
 data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
-
-def keysWithValue(aDict, target):
-    return sorted(key for key, value in aDict.items() if target == value)
 
 
 def balanceMap(mapfile,min_count=100,max_count=500):

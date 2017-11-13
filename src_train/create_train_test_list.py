@@ -6,7 +6,8 @@ Created on Sun Jun 25 13:48:16 2017
 
 
 Creates train and test lists from the images 
-Each class es used has to have enough obsercations (min_obs)
+Each classes used have to have enough observations (min_obs)
+creates type_dict
 """
 
 
@@ -18,6 +19,9 @@ import collections
 
 from src_train.train_config import train_params
 #imp.reload(sys.modules['train_params'])
+
+def keysWithValue(aDict, target):
+    return sorted(key for key, value in aDict.items() if target == value)
 
 # do startified random split in the data
 def get_stratified_train_test_inds(y,train_proportion=0.7):
@@ -47,8 +51,8 @@ def get_stratified_train_test_inds(y,train_proportion=0.7):
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171110')
-
+cfg=train_params(data_dir,crop=True,training_id='20171112')
+typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 
 """
 Read data description file
@@ -69,21 +73,20 @@ Set numeric class labels
 classes=df_filtered['Class name']
 type_dict=collections.OrderedDict()
 
-for label, class_name in enumerate(classes.unique()):
-    type_dict[class_name]=label
+for label, class_name in enumerate(sorted(classes.unique())):
+    type_dict[label]=class_name
     
 # write type_dict
-typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 out = open(typedict_file, 'wt')
-w = csv.DictWriter(out, delimiter=';', fieldnames=['type','label'])
+w = csv.DictWriter(out, delimiter=';', fieldnames=['label','type'])
 w.writeheader()
 for key, value in type_dict.items():
-    w.writerow({'type' : key, 'label' : value})
+    w.writerow({'label' : key, 'type' : value})
 out.close()
     
 labels=[]
 for cl in classes:
-    labels.append(type_dict[cl])  
+    labels.append(keysWithValue(type_dict,cl)[0])
     
 df_labeled=df_filtered[['Filename']]
 df_labeled['category']=labels
