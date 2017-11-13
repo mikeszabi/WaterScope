@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 from src_tools.file_helper import walklevel
 
 
-tree = ET.parse('cfg_2steps.xml')
+tree = ET.parse('cfg_SU_classifier.xml')
 root_dir = tree.find('folders/root').text
 measure_dir = os.path.join(root_dir,tree.find('folders/measurement').text)
 

@@ -72,7 +72,7 @@ for i, im_name in enumerate(image_list_indir):
 #  im_name=image_list_indir[i]
     image_file=os.path.join(image_dir,im_name)    
 
-    img = Image.open(image_file)
+    img = Image.open(image_file).convert('RGB')
     img_square=crop.crop(img)
     im=np.asarray(img_square)
     with warnings.catch_warnings():

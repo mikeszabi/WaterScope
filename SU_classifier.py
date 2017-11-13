@@ -28,34 +28,43 @@ from src_tools.results2xml import XMLWriter
 
 class params:
     
-    def __init__(self):
+    def __init__(self,cfg_file='cfg_SU_classifier.xml'):
         # reading parameters
-        tree = ET.parse('cfg_2steps.xml')
         self.dirs={}
         self.files={}
-        self.dirs['root'] = tree.find('folders/root').text 
-        self.dirs['measurement'] = tree.find('folders/measurement').text 
-        self.dirs['classification'] = tree.find('folders/classification').text 
-        self.dirs['results'] = tree.find('folders/results').text 
-        self.files['control'] = tree.find('files/control').text 
-        self.files['measure'] = tree.find('files/measure').text
-        self.files['model_trash'] = os.path.join(tree.find('folders/model').text,
-                                          tree.find('files/model_trash').text)
-        self.files['model_taxon'] = os.path.join(tree.find('folders/model').text,
-                                          tree.find('files/model_taxon').text)
-        self.files['typedict'] = os.path.join(tree.find('folders/model').text,
-                                          tree.find('files/typedict').text)
-        
-        self.type_dict_taxon=self.get_typedict(self.files['typedict'])
-        
-        self.type_dict_trash={'0':'Others.Another.nemCentrales','1':'Object'}
+        self.neural={}
+        if os.path.exists(cfg_file):
+            tree = ET.parse(cfg_file)
+            self.dirs['root'] = tree.find('folders/root').text 
+            self.dirs['measurement'] = tree.find('folders/measurement').text 
+            self.dirs['classification'] = tree.find('folders/classification').text 
+            self.dirs['results'] = tree.find('folders/results').text 
+            self.files['control'] = tree.find('files/control').text 
+            self.files['measure'] = tree.find('files/measure').text
+            model_trash_file=tree.find('files/model_trash').text
+            if not model_trash_file=='None':
+                self.files['model_trash'] = os.path.join(tree.find('folders/model').text,
+                                              model_trash_file)
+            else:
+                self.files['model_trash']='None'    
+            self.files['model_taxon'] = os.path.join(tree.find('folders/model').text,
+                                              tree.find('files/model_taxon').text)
+            self.files['typedict'] = os.path.join(tree.find('folders/model').text,
+                                              tree.find('files/typedict').text)
+            
+            self.type_dict_taxon=self.get_typedict(self.files['typedict'])
+            
+            self.type_dict_trash={'0':'Others.Another.nemCentrales','1':'Object'}
+            
+            self.neural['im_size'] = int(tree.find('neural/im_size').text)
         
     def get_typedict(self,typedict_file):
         type_dict={}
         if os.path.isfile(typedict_file):
-            reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=':')
-            for row in reader:
-                type_dict[row['label']]=row['type']
+            with open(typedict_file, 'rt') as tf:
+                reader =csv.DictReader(tf, delimiter=':')
+                for row in reader:
+                    type_dict[row['label']]=row['type']
             print('typeDict loaded')
         else:
             for i in range(100):
@@ -69,15 +78,20 @@ class Application(tk.Frame):
        
     def __init__(self, master=None):
         self.params=params()
+        if not self.params.dirs:
+            print('config file - failed to load')
+            return
 
         tk.Frame.__init__(self, master, background="green")
         self.pack(fill="both", expand=True)
         self.createWidgets()
         
-        
-        self.cnn_1=classifications.cnn_classification(self.params.files['model_trash'])
-        print('load model '+self.params.files['model_trash'])
-        self.cnn_2=classifications.cnn_classification(self.params.files['model_taxon'])
+        if not self.params.files['model_trash']=='None':
+            self.cnn_trash=classifications.cnn_classification(self.params.files['model_trash'],
+                                                              im_size=self.params.neural['im_size'])
+            print('load model '+self.params.files['model_trash'])
+        self.cnn_taxon=classifications.cnn_classification(self.params.files['model_taxon'],
+                                                          im_size=self.params.neural['im_size'])
         print('load model '+self.params.files['model_taxon'])
         
 #        # check result folder
@@ -168,7 +182,7 @@ class Application(tk.Frame):
             self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'TEST directory is processed\n')
              
             # write to csv
-            df_images_processed.to_csv(os.path.join(test_dir,'classification_result.csv'))
+            df_images_processed.to_csv(os.path.join(test_dir,'classification_result.csv'),index=False)
                 
         self.date_entry.delete(0, tk.END)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
@@ -199,8 +213,12 @@ class Application(tk.Frame):
             self.after(1000,self.onUpdate)
     
     def process_oneimage(self,image_file):
-        im = classifications.create_image(image_file,cropped=False)
-        predicted_label, prob_trash = self.cnn_1.classify(im)
+        if not self.params.files['model_trash']=='None':
+            img = classifications.create_image(image_file,cropped=False)
+            predicted_label, prob_trash = self.cnn_trash.classify(img)
+        else:
+            prob_trash=100
+            predicted_label=1
         if predicted_label==0:
             # TRASH goes to Recycle bin
             predicted_type=self.params.type_dict_trash[str(predicted_label)]
@@ -209,8 +227,8 @@ class Application(tk.Frame):
             self.text.see(tk.END)
         else:
             # NOT TRASH
-            im = classifications.create_image(image_file,cropped=True)
-            predicted_label, prob_taxon = self.cnn_2.classify(im)
+            img = classifications.create_image(image_file,cropped=True)
+            predicted_label, prob_taxon = self.cnn_taxon.classify(img)
             predicted_type=self.params.type_dict_taxon[str(predicted_label)]
             self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob_taxon)+'\n')
             self.text.see(tk.END)

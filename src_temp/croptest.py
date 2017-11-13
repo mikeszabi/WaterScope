@@ -44,7 +44,7 @@ Filter for classes
 """
 df_filtered=df_db[df_db['Class name']=='_Trash']
 image_file=df_filtered.iloc[2300]['Filename']
-image_file=r'e:\OneDrive\WaterScope\Images\crop_problems\0000451_DHM2.0.20151007.000..20160212T113144-0002.png'
+image_file=r'e:\OneDrive\WaterScope\Images\crop_problems\0005970_DHM2.0.20151007.000..20151008T140653-0001.png'
 
 lengths=[]
 for i,d in df_db.iterrows():
