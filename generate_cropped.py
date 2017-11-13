@@ -41,7 +41,7 @@ df_db = pd.DataFrame(data={'Filename':image_list,'Class name':class_names})
 #image_list=list(df_db['Filename'])
 image_list=fh.imagelist_in_depth(cfg.imagedb_dir,level=1)
 
-
+char_size_dict={}
 for i, image_file in enumerate(image_list):
 #   i=1
     image_file=image_list[i]
@@ -57,9 +57,10 @@ for i, image_file in enumerate(image_list):
             if not os.path.exists(save_dir_cat):
                 os.makedirs(save_dir_cat)
             save_file=os.path.join(save_dir_cat,os.path.basename(image_file))
-            img_square=classifications.create_image(image_file,cropped=True,
+            img_square, char_sizes=classifications.create_image(image_file,cropped=True,
                                                     save_file=save_file,
                                                     category=category)
+            char_size_dict[save_file]=char_sizes
         except:
             print('loading error: '+image_file)
         

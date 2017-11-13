@@ -17,12 +17,13 @@ import src_tools.file_helper as fh
 import crop 
 
 
-
 #data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 
 
 cfg=train_params(data_dir)
+
+save_dir=os.path.join(r'E:\OneDrive\WaterScope','Images','tmp')
 
 image_list=fh.imagelist_in_depth(cfg.imagedb_dir,level=2)
 image_list=fh.imagelist_in_depth(os.path.join(data_dir,'Images','crop_problems'),level=1)
@@ -42,9 +43,10 @@ df_db = pd.DataFrame(data={'Filename':image_list,'Class name':class_names})
 Filter for classes
 
 """
-df_filtered=df_db[df_db['Class name']=='_Trash']
-image_file=df_filtered.iloc[2300]['Filename']
-image_file=r'e:\OneDrive\WaterScope\Images\crop_problems\0005970_DHM2.0.20151007.000..20151008T140653-0001.png'
+#df_filtered=df_db[df_db['Class name']=='_Trash']
+df_filtered=df_db.copy()
+image_file=df_filtered.iloc[1]['Filename']
+image_file=r'e:\OneDrive\WaterScope\Images\crop_problems\0002678_DHM2.0.20151007.000..20151008T113053-0003.png'
 
 lengths=[]
 for i,d in df_db.iterrows():
@@ -54,10 +56,14 @@ for i,d in df_db.iterrows():
 
     img = Image.open(image_file)
     
-    length=crop.get_pixelsize(img)
+    pixel_per_micron=crop.get_pixelsize(img)
        
     
-    print(str(length)+' '+image_file)
-    lengths.append(length)
+    print(str(pixel_per_micron)+' '+image_file)
+    lengths.append(pixel_per_micron)
+    
+
+    save_file=os.path.join(save_dir,os.path.basename(image_file))
+    img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category='')
 
     

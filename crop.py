@@ -26,11 +26,11 @@ from skimage.feature import blob_dog
 
 import numpy as np
 
+min_extent_in_micron=20
 
-
-def crop_edge(gray):
+def crop_edge(gray,pixel_per_micron=1.5):
     contr=gray.max()-gray.min()
-    high_tsh=max(0.1,contr*0.3)
+    high_tsh=max(0.1,contr*0.32)
     low_tsh=max(0.005,contr*0.01)
 #    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.01, high_threshold=0.995, use_quantiles=True)
     edges1 = feature.canny(gray, sigma=2, low_threshold=low_tsh, high_threshold=high_tsh, use_quantiles=False)
@@ -38,38 +38,42 @@ def crop_edge(gray):
     edges2 = morphology.binary_dilation(edges1,morphology.disk(11))
  
     bb=(0,0,gray.shape[0],gray.shape[1])
+    char_sizes=(max(gray.shape)/pixel_per_micron,min(gray.shape)/pixel_per_micron)
     
     label_im=measure.label(edges2)
-    props = measure.regionprops(label_im)
+    props = measure.regionprops(label_im,intensity_image=1-gray)
     
-    areas = [prop.area for prop in props]    
-    l = [prop.major_axis_length  for prop in props]  
+    areas = [prop.area for prop in props]   
+    max_intensities = [prop.max_intensity  for prop in props] 
     if areas:    
-        if max(l)>max(gray.shape[0],gray.shape[1])*0.2:
-            # ToDo : set minsize as absolute value
-            # ToDo: find area with largest edges1
-            prop_large = props[np.argmax(areas)]       
+        prop_large = props[np.argmax(max_intensities)]  
+        if prop_large.major_axis_length>min_extent_in_micron*pixel_per_micron:
+            # min length in micron
             bb=prop_large.bbox
+            char_sizes=(prop_large.major_axis_length/pixel_per_micron,
+                        prop_large.minor_axis_length/pixel_per_micron)
 
-    return bb
+    return bb,char_sizes
 
-def crop_blob(gray):
-    # DoG
-    blobs = blob_dog(1-gray, min_sigma=5, threshold=.1)
-    blobs[:, 2] = blobs[:, 2] * np.sqrt(2)
-
-    # DoH
-    #blobs = blob_doh(image_gray, max_sigma=30, threshold=.01)
-    
-    if blobs.size>0:       
-        blob_large = blobs[np.argmax(blobs[:, 2]),:]     
-        bb=(blob_large[0]-blob_large[2],blob_large[1]-blob_large[2],2*blob_large[2],2*blob_large[2])
-    else:
-        bb=(0,0,gray.shape[0],gray.shape[1])
-    
-    return bb
+#def crop_blob(gray):
+#    # DoG
+#    blobs = blob_dog(1-gray, min_sigma=5, threshold=.1)
+#    blobs[:, 2] = blobs[:, 2] * np.sqrt(2)
+#
+#    # DoH
+#    #blobs = blob_doh(image_gray, max_sigma=30, threshold=.01)
+#    
+#    if blobs.size>0:       
+#        blob_large = blobs[np.argmax(blobs[:, 2]),:]     
+#        bb=(blob_large[0]-blob_large[2],blob_large[1]-blob_large[2],2*blob_large[2],2*blob_large[2])
+#    else:
+#        bb=(0,0,gray.shape[0],gray.shape[1])
+#    
+#    return bb
 
 def get_pixelsize(img):
+    # the linear measure is 20 micron
+    line_length=20
     # 4th layer codes the pixelsize
     im = np.asarray(img,dtype=np.uint8)
 
@@ -83,15 +87,20 @@ def get_pixelsize(img):
 
     length=np.NaN
     if len(regions)==1:
-       bb = regions[0].bbox
-       length=bb[3]-bb[1]
-       
-    return length
+        bb = regions[0].bbox
+        length=bb[3]-bb[1]
+# length in pixel per micron    
+        pixel_per_micron=length/line_length
+    else:
+        pixel_per_micron=1.5
+    if pixel_per_micron<1:
+        pixel_per_micron=1.5
+    return pixel_per_micron
    
 
 def crop(img,pad_rate=0.25,save_file='',category=''):
 
-    #length = get_pixelsize(img)
+    pixel_per_micron = get_pixelsize(img)
     
     img_rgb=img.convert('RGB')     # if png
 #   img_rgb=img
@@ -100,7 +109,7 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     
     gray=rgb2gray(im)
     
-    bb=crop_edge(gray)
+    bb, char_sizes=crop_edge(gray,pixel_per_micron=pixel_per_micron)
 #        
     dx=bb[2]-bb[0]
     dy=bb[3]-bb[1]
@@ -115,7 +124,6 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
         
     if min(im_cropped.shape)>0:
         img_cropped = Image.fromarray(np.uint8(im_cropped))
-        # ToDo: Set img_square to have always the same image size: (200,200) ? 
         img_w, img_h = img_cropped.size
         img_square=Image.new('RGBA', (max(img_cropped.size),max(img_cropped.size)), (255,255,255,255))
         bg_w, bg_h = img_square.size
@@ -124,7 +132,7 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
         
         if save_file and category:
             fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 3))
-            fig.suptitle(category)
+            fig.suptitle(category+'  '+"{:.0f}".format(char_sizes[0])+','+"{:.0f}".format(char_sizes[1]))
         
             ax1.imshow(im)
             #ax1.axis('off')
@@ -144,6 +152,6 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     else:
         img_square=[]
         
-    return img_square
+    return img_square, char_sizes
         
     
