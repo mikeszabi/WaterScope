@@ -22,7 +22,7 @@ import crop
 def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category=''):
     img = Image.open(image_file)
     if cropped:
-        img_square=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category)
+        img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category)
     else:
         img_square=img.copy()
     return img_square
