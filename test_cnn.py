@@ -22,10 +22,11 @@ from skimage import img_as_ubyte
 from cntk import load_model
 
 from src_train.train_config import train_params
+from src_train.multiclass_stats import multiclass_statistics
 
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171112')
+cfg=train_params(data_dir,crop=True,training_id='20171113')
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
 
@@ -40,7 +41,7 @@ write_misc=False
 
 
 type_dict={}
-reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=';')
+reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=':')
 for row in reader:
     type_dict[row['label']]=row['type']
 
@@ -100,31 +101,45 @@ if write_misc:
         copyfile(misc[0],save_file)
         print(misc)
     
+stats=multiclass_statistics(cont_table,macro=False)
 
-
-# Calculate statistical measures 1vsAll
-num_classes=cont_table.shape[0]
-n_obs=cont_table.sum().sum()
-
-
-tp=[None]*num_classes # correct classification
-tn=[None]*num_classes # 
-# True positive for i-th class; 1 vs. all
-        
-tp=[cont_table.iloc[i,i] for i in range(0,num_classes)] # correctly identified
-fp=[-tp[i]+sum(cont_table.iloc[i,:]) for i in range(0,num_classes)] # incorrectly identified class members
-fn=[-tp[i]+sum(cont_table.iloc[:,i]) for i in range(0,num_classes)] # incorrectly identified non-class members
-tn=[n_obs-fp[i]-fn[i]-tp[i] for i in range(0,num_classes)] # correctly identified non-class members
-
-# MACRO
-beta=1
-
-avg_accuracy=sum([(tp[i]+tn[i])/(tp[i]+fn[i]+fp[i]+tn[i]) for i in range(0,num_classes)])/num_classes
-# MACRO - all classes equally weighted
-precision=sum([(tp[i])/(tp[i]+fp[i]) for i in range(0,num_classes)])/num_classes
-recall=sum([(tp[i])/(tp[i]+fn[i]) for i in range(0,num_classes)])/num_classes
-# MICRO - larger classes have more weight
-precision=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fp[i]) for i in range(0,num_classes)])
-recall=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fn[i]) for i in range(0,num_classes)])
-
-fscore=(np.square(beta)+1)*precision*recall/(np.square(beta)*precision+recall)
+## Calculate statistical measures for multiclass classification
+## 1 vs. all single class approach
+## in cont_table rows are actual labels, cols are predictions!                
+#
+#num_classes=cont_table.shape[0]
+#n_obs=cont_table.sum().sum()
+#
+## Allocate memory
+#tp=[None]*num_classes # correct inclass lassification
+#tn=[None]*num_classes # correct outclass classification - 1 vs. all
+#fp=[None]*num_classes # incorrect inclass classification
+#fn=[None]*num_classes # incorrect outclass classification
+#
+## Calculate classification rates        
+#tp=[cont_table.iloc[i,i] for i in range(0,num_classes)] # correctly identified
+#fp=[-tp[i]+sum(cont_table.iloc[i,:]) for i in range(0,num_classes)] # incorrectly identified class members
+#fn=[-tp[i]+sum(cont_table.iloc[:,i]) for i in range(0,num_classes)] # incorrectly identified non-class members
+#tn=[n_obs-fp[i]-fn[i]-tp[i] for i in range(0,num_classes)] # correctly identified non-class members
+#
+## calculate statistics
+## recall - same as sensitivity
+#
+## 1., MACRO - all classes equally weighted
+#
+## MACRO - all classes equally weighted
+#precision=sum([(tp[i])/(tp[i]+fp[i]) for i in range(0,num_classes)])/num_classes
+#recall=sum([(tp[i])/(tp[i]+fn[i]) for i in range(0,num_classes)])/num_classes
+#specificity=sum([(tn[i])/(tn[i]+fp[i]) for i in range(0,num_classes)])/num_classes
+#avg_accuracy=sum([(tp[i]+tn[i])/(tp[i]+fn[i]+fp[i]+tn[i]) for i in range(0,num_classes)])/num_classes
+#
+## 2., MICRO - larger classes have more weight
+#precision=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fp[i]) for i in range(0,num_classes)])
+#recall=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fn[i]) for i in range(0,num_classes)])
+#specificity=sum([(tn[i]) for i in range(0,num_classes)])/sum([(tn[i]+fp[i]) for i in range(0,num_classes)])
+#avg_accuracy=sum([(tp[i]) for i in range(0,num_classes)])/n_obs
+#
+#beta=1
+#fscore=(np.square(beta)+1)*precision*recall/(np.square(beta)*precision+recall)
+#
+#print

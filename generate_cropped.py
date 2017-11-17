@@ -18,7 +18,7 @@ data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 
 
-cfg=train_params(data_dir)
+cfg=train_params(data_dir,crop=False,training_id='20171113')
 
 # cropped results are saved here
 save_dir=os.path.join(data_dir,'Images','tmp')
@@ -78,4 +78,22 @@ for i, image_file in enumerate(image_list):
             print('crop problem: '+image_file)   
     else:        
         print('not in db: '+image_file)   
-                        
+
+"""
+Saving characteristic sizes
+"""
+class_names=[]
+file_names=[]
+maxl=[]
+minl=[]
+
+for k,v in char_size_dict.items():
+    class_names.append(os.path.dirname(k).split('\\')[-1])
+    file_names.append(os.path.basename(k))
+    maxl.append(v[0])
+    minl.append(v[1])
+    
+pd_char_size=pd.DataFrame(data={'Filename':file_names,'Class name':class_names,'maxl':maxl,'minl':minl})
+                      
+save_dir=os.path.join(cfg.imagedb_dir,'char_sizes.txt')
+pd_char_size.to_csv(save_dir,sep=';',index=None)

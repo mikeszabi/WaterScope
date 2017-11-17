@@ -18,7 +18,7 @@ import src_tools.file_helper as fh
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True)
+cfg=train_params(data_dir,crop=True,training_id='20171113')
 count_threshold = 200
 
 image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)

@@ -51,7 +51,7 @@ def get_stratified_train_test_inds(y,train_proportion=0.7):
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171112')
+cfg=train_params(data_dir,crop=True,training_id='20171113')
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 
 """
@@ -78,7 +78,7 @@ for label, class_name in enumerate(sorted(classes.unique())):
     
 # write type_dict
 out = open(typedict_file, 'wt')
-w = csv.DictWriter(out, delimiter=';', fieldnames=['label','type'])
+w = csv.DictWriter(out, delimiter=':', fieldnames=['label','type'])
 w.writeheader()
 for key, value in type_dict.items():
     w.writerow({'label' : key, 'type' : value})

@@ -30,7 +30,7 @@ from src_train.train_config import train_params
 #%matplotlib inline
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171112')
+cfg=train_params(data_dir,crop=True,training_id='20171113')
 
 
 imgSize=64
