@@ -320,6 +320,10 @@ class Application(tk.Frame):
                 
                 xml_file=os.path.join(measure_dir,dfo,mfo,'MeasureSum_'+measure_date+'_'+measure_time+'.xml')
                 cur_result.save(targetFile=xml_file)
+                
+                xml_file_details=os.path.join(measure_dir,dfo,mfo,'MeasureDetails_'+measure_date+'_'+measure_time+'.xml')
+                file=open(xml_file_details,'w')
+                file.close()
 
 #            
 
