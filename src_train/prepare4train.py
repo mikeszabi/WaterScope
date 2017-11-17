@@ -107,7 +107,7 @@ def saveTrainImages(filename, train_dir):
     
 # Szabi code
     reader =csv.DictReader(open(filename, 'rt'), delimiter=';')
-    prods = {}
+    ims = {}
 
     with open(os.path.join(train_dir,'train_map.txt'), 'w') as mapFile:
         with open(os.path.join(train_dir,'train_regrLabels.txt'), 'w') as regrFile:
@@ -115,7 +115,7 @@ def saveTrainImages(filename, train_dir):
                 label=int(row['category'])
 #                lab=label_base.copy()
 #                lab[label]=1
-                prods[row['image']]=row['category']
+                ims[row['image']]=row['category']
 # read image file
 # create data sequence RRR GGG BBB
                 fname = row['image']
@@ -132,7 +132,7 @@ def saveTrainImages(filename, train_dir):
                 data=np.transpose(data, (2, 0, 1)) # CHW format.
                 saveImage(fname, data, label, mapFile, regrFile, 0, mean=dataMean)
 
-#    dataMean = dataMean / len(prods)
+#    dataMean = dataMean / len(ims)
     dataMean = 128*np.ones((3, imgSize, imgSize))
     saveMean(os.path.join(train_dir,'data_mean.xml'), dataMean)
 
@@ -142,12 +142,12 @@ def saveTestImages(filename, train_dir):
         
     # Szabi code
     reader =csv.DictReader(open(filename, 'rt'), delimiter=';')
-    prods = {}
+    ims = {}
 
     with open(os.path.join(train_dir,'test_map.txt'), 'w') as mapFile:
         with open(os.path.join(train_dir,'test_regrLabels.txt'), 'w') as regrFile:
             for row in reader:
-                prods[row['image']]=row['category']
+                ims[row['image']]=row['category']
 # read image file
 # create data sequence RRR GGG BBB
 

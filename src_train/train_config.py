@@ -33,6 +33,8 @@ class train_params:
 
             self.train_image_list_file=os.path.join(self.train_dir,'images_train.csv')
             self.test_image_list_file=os.path.join(self.train_dir,'images_test.csv')
+            self.train_text_list_file=os.path.join(self.train_dir,'text_train.csv')
+            self.test_text_list_file=os.path.join(self.train_dir,'text_test.csv')
         else:
             print('data dir does not exist')
 

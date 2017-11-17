@@ -9,7 +9,7 @@ Uses class_map
 
 
 import csv
-
+import numpy as np
 import pandas as pd
 import os
 from src_train.train_config import train_params
@@ -18,7 +18,7 @@ import src_tools.file_helper as fh
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171113')
+cfg=train_params(data_dir,crop=True,training_id='20171114')
 count_threshold = 200
 
 image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)
@@ -38,6 +38,24 @@ df_db = pd.DataFrame(data={'Filename':file_names,'Class name':class_names})
 #df_classes.to_csv(cfg.classnames_file,sep=';')
 
 """
+Adding size info
+"""
+size_file=os.path.join(cfg.imagedb_dir,'char_sizes.txt')
+
+df_char_size=pd.read_csv(size_file,delimiter=';')
+minl=[]
+maxl=[]
+for i, row in df_db.iterrows():
+    file_name,ext=os.path.splitext(os.path.basename(row['Filename']))
+    file_name=file_name.split('__')[0]+ext
+    class_id=row['Class name']
+    matching_row=df_char_size[(df_char_size['Class name']==class_id) & (df_char_size['Filename']==file_name)]
+    minl.append(int(np.round(matching_row['minl'].values[0])))
+    maxl.append(int(np.round(matching_row['maxl'].values[0])))
+df_db['minl']=minl
+df_db['maxl']=maxl
+
+"""
 Group merging - using class_map file
 class_map maps the folder names to taxon names
 """
@@ -50,6 +68,9 @@ with open(cfg.merge_file, mode='r') as infile:
 for k,v in merge_dict.items():
     df_db.replace(k,v,inplace=True)
 classes_count=df_db['Class name'].value_counts()
+
+
+
 
 """
 Eliminating groups with low counts - adding them to a rest container (like _Others)

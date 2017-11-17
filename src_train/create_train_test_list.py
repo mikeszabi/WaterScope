@@ -24,7 +24,7 @@ def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
 
 # do startified random split in the data
-def get_stratified_train_test_inds(y,train_proportion=0.7):
+def get_stratified_train_test_inds(y,train_proportion=0.75):
     '''Generates indices, making random stratified split into training set and testing sets
     with proportions train_proportion and (1-train_proportion) of initial sample.
     y is any iterable indicating classes of each observation in the sample.
@@ -44,14 +44,14 @@ def get_stratified_train_test_inds(y,train_proportion=0.7):
         train_inds[value_inds[:n]]=True
         test_inds[value_inds[n:]]=True
 
-    return train_inds,test_inds
+    return np.where(train_inds)[0],np.where(test_inds)[0]
 
 
 
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171113')
+cfg=train_params(data_dir,crop=True,training_id='20171114')
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 
 """
@@ -88,31 +88,38 @@ labels=[]
 for cl in classes:
     labels.append(keysWithValue(type_dict,cl)[0])
     
-df_labeled=df_filtered[['Filename']]
+df_labeled=df_filtered[['Filename']].copy()
 df_labeled['category']=labels
 df_labeled.columns=['image','category']
 
+df_sizes=df_filtered[['minl','maxl']].copy()
 
 """
 Spit to test and train sest
 """
 train_inds,test_inds = get_stratified_train_test_inds(df_labeled['category'], cfg.trainRatio)
-df_train=df_labeled[train_inds] 
-df_test=df_labeled[test_inds] 
+np.random.shuffle(train_inds)
+np.random.shuffle(test_inds)
+df_train_image=df_labeled.iloc[train_inds]
+df_test_image=df_labeled.iloc[test_inds]
+df_train_text=df_sizes.iloc[train_inds]
+df_test_text=df_sizes.iloc[test_inds]
+
 
 """
 Do some stats
 """
-classes_count_train=df_train['category'].value_counts()
-print(len(df_train))
-classes_count_test=df_train['category'].value_counts()
-print(len(df_test))
+classes_count_train=df_train_image['category'].value_counts()
+print(len(df_train_image))
+classes_count_test=df_test_image['category'].value_counts()
+print(len(df_test_image))
 # number of classes
 print(len(df_labeled['category'].value_counts()))
 
 """
 Write train and test list
 """
-df_train.to_csv(cfg.train_image_list_file,sep=';',index=None)
-df_test.to_csv(cfg.test_image_list_file,sep=';',index=None)
-
+df_train_image.to_csv(cfg.train_image_list_file,sep=';',index=None)
+df_test_image.to_csv(cfg.test_image_list_file,sep=';',index=None)
+df_train_text.to_csv(cfg.train_text_list_file,sep=';',index=None)
+df_test_text.to_csv(cfg.test_text_list_file,sep=';',index=None)

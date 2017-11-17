@@ -5,24 +5,6 @@ Created on Fri Nov 17 12:44:07 2017
 @author: picturio
 """
 
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Marketplace
-Explore
- @mikeszabi
- Sign out
- Watch 1,291
-  Star 13,084  Fork 3,407 Microsoft/CNTK
- Code  Issues 253  Pull requests 42  Wiki  Insights
-Branch: master Find file Copy pathCNTK/Examples/Image/Classification/AlexNet/Python/AlexNet_ImageNet_Distributed.py
-ccfd6c7  on Sep 12
-@tangyuq tangyuq Refactor the core learner APIs:
-9 contributors @cha-zhang @ebarsoumMS @frankseide @eldakms @ivrodr-msft @n17s @raaaar @tangyuq @amitaga
-RawBlameHistory     
-255 lines (213 sloc)  12.1 KB
 # Copyright (c) Microsoft. All rights reserved.
 
 # Licensed under the MIT license. See LICENSE.md file in the project root

@@ -12,27 +12,28 @@ import matplotlib.pyplot as plt
 
 #from cntk.device import try_set_default_device, gpu
 from cntk import cross_entropy_with_softmax, classification_error, input_variable, softmax, element_times
-from cntk.io import MinibatchSource, ImageDeserializer, StreamDef, StreamDefs, transforms
+from cntk.io import MinibatchSource, ImageDeserializer, CTFDeserializer, StreamDef, StreamDefs, transforms
 from cntk import Trainer, UnitType
 from cntk import momentum_sgd, learning_rate_schedule, momentum_as_time_constant_schedule
 #from cntk.learners import momentum_schedule
 from cntk.logging import log_number_of_parameters, ProgressPrinter, TensorBoardProgressWriter
 
 
-from src_train.model_functions import create_basic_model, create_advanced_model
+from src_train.model_functions import create_model_size
 from src_train.train_config import train_params
 #from src_train.readers import create_reader
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171113')
+cfg=train_params(data_dir,crop=True,training_id='20171114')
 
 model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
 model_temp_file=os.path.join(cfg.train_dir,'cnn_model_temp.dnn')
 train_log_file=os.path.join(cfg.train_log_dir,'progress_log.txt')
 
-train_map=os.path.join(cfg.train_dir,'train_map.txt')
-test_map=os.path.join(cfg.train_dir,'test_map.txt')
-# GET train and test map from prepare4train
+train_map_image=os.path.join(cfg.train_dir,'train_map_image.txt')
+test_map_image=os.path.join(cfg.train_dir,'test_map_image.txt')
+train_map_text=os.path.join(cfg.train_dir,'train_map_text.txt')
+test_map_text=os.path.join(cfg.train_dir,'test_map_text.txt')
 
 data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
 
@@ -48,7 +49,7 @@ num_classes  = 32
 #
 # Define the reader for both training and evaluation action.
 #
-def create_reader(map_file, mean_file, train, image_height=64, image_width=64, num_channels=3, num_classes=32):
+def create_reader_with_size(map_file_image, map_file_size, mean_file_image, train, image_height=64, image_width=64, num_channels=3, num_classes=32):
   
     # transformation pipeline for the features has jitter/crop only when training
     # https://docs.microsoft.com/en-us/python/api/cntk.io.transforms?view=cntk-py-2.2
@@ -59,42 +60,49 @@ def create_reader(map_file, mean_file, train, image_height=64, image_width=64, n
         ]
     trs += [
         transforms.scale(width=image_width, height=image_height, channels=num_channels, interpolations='linear'),
-        transforms.mean(mean_file)
+        transforms.mean(mean_file_image)
     ]
     # deserializer
-    image_source=ImageDeserializer(map_file, StreamDefs(
+    image_source=ImageDeserializer(map_file_image, StreamDefs(
         features = StreamDef(field='image', transforms=trs), # first column in map file is referred to as 'image'
         labels   = StreamDef(field='label', shape=num_classes)      # and second as 'label'
     ))
-    return MinibatchSource(image_source)
+    size_source = CTFDeserializer(map_file_size, StreamDefs(
+        minl = StreamDef(field='minl', shape=1,is_sparse=False),
+        maxl = StreamDef(field='maxl', shape=1,is_sparse=False)
+    ))
+        
+    return MinibatchSource([image_source,size_source])
     
 #
 # Train and evaluate the network.
 #
 
     
-reader_train = create_reader(train_map, data_mean_file, True, image_height=image_height, image_width=image_width, num_channels=num_channels, num_classes=num_classes)
-reader_test  = create_reader(test_map, data_mean_file, False,  image_height=image_height, image_width=image_width, num_channels=num_channels, num_classes=num_classes)
+reader_train = create_reader_with_size(train_map_image, train_map_text, data_mean_file, True, image_height=image_height, image_width=image_width, num_channels=num_channels, num_classes=num_classes)
+reader_test  = create_reader_with_size(test_map_image, test_map_text,data_mean_file, False,  image_height=image_height, image_width=image_width, num_channels=num_channels, num_classes=num_classes)
 
 #==============================================================================
 # SET parameters
 #==============================================================================
-max_epochs=100
-model_func=create_basic_model
+max_epochs=10
+model_func=create_model_size
 
 
 #==============================================================================
 # ###
 #==============================================================================
 input_var = input_variable((num_channels, image_height, image_width))
+#size_var = input_variable((2,1,1))
 label_var = input_variable((num_classes))
-
+maxl_var = input_variable((1))
+minl_var = input_variable((1))
 # Normalize the input
 feature_scale = 1.0 / 256.0
 input_var_norm = element_times(feature_scale, input_var)
 
 # apply model to input
-z = model_func(input_var_norm, out_dims=num_classes)
+z = model_func(input_var_norm, maxl_var, minl_var,out_dims=num_classes)
 
 """
 # Training action
@@ -139,7 +147,9 @@ trainer     = Trainer(z, (ce, pe), learner, progress_writers)
 # define mapping from reader streams to network inputs
 input_map = {
     input_var: reader_train.streams.features,
-    label_var: reader_train.streams.labels
+    label_var: reader_train.streams.labels,
+    maxl_var: reader_train.streams.maxl,
+    minl_var: reader_train.streams.minl,
 }
 
 log_number_of_parameters(z) ; print()
@@ -189,8 +199,10 @@ sample_count    = 0
 minibatch_index = 0
 
 input_map = {
-    input_var: reader_test.streams.features,
-    label_var: reader_test.streams.labels
+    input_var: reader_train.streams.features,
+    label_var: reader_train.streams.labels,
+    maxl_var: reader_train.streams.maxl,
+    minl_var: reader_train.streams.minl,
 }
 
 while sample_count < epoch_size:

@@ -95,5 +95,5 @@ for k,v in char_size_dict.items():
     
 pd_char_size=pd.DataFrame(data={'Filename':file_names,'Class name':class_names,'maxl':maxl,'minl':minl})
                       
-save_dir=os.path.join(cfg.imagedb_dir,'char_sizes.txt')
-pd_char_size.to_csv(save_dir,sep=';',index=None)
+size_file=os.path.join(cfg.imagedb_dir,'char_sizes.txt')
+pd_char_size.to_csv(size_file,sep=';',index=None)
