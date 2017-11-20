@@ -25,7 +25,7 @@ from src_train.train_config import train_params
 #%matplotlib inline
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171114')
+cfg=train_params(data_dir,crop=True,training_id='20171119')
 
 
 imgSize=64
@@ -67,7 +67,7 @@ def saveImage_row(fname, label,mapFile):
     
 def saveText_row(maxl,minl,mapFile):
 
-    mapFile.write('|maxl '+str(maxl)+' |minl '+str(minl)+'\n')
+    mapFile.write('|size '+str(maxl)+' '+str(minl)+'\n')
 
 #    
 def saveMean(fname, data):

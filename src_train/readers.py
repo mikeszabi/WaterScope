@@ -36,7 +36,7 @@ def create_reader(map_file, mean_file, train, image_height=64, image_width=64, n
 
 # https://cntk.ai/pythondocs/Manual_How_to_feed_data.html
 # https://docs.microsoft.com/en-us/cognitive-toolkit/brainscript-cntktextformat-reader
-def create_reader_with_size(map_file_image, map_file_size, mean_file_image, train, image_height=64, image_width=64, num_channels=3, num_classes=32):
+def create_reader_with_ext_values(map_file_image, map_file_size, mean_file_image, train, image_height=64, image_width=64, num_channels=3, num_classes=32):
   
     # transformation pipeline for the features has jitter/crop only when training
     # https://docs.microsoft.com/en-us/python/api/cntk.io.transforms?view=cntk-py-2.2
@@ -54,12 +54,11 @@ def create_reader_with_size(map_file_image, map_file_size, mean_file_image, trai
         features = StreamDef(field='image', transforms=trs), # first column in map file is referred to as 'image'
         labels   = StreamDef(field='label', shape=num_classes)      # and second as 'label'
     ))
-    size_source = CTFDeserializer(map_file_size, StreamDefs(
-        minl = StreamDef(field='minl', shape=1,is_sparse=False),
-        maxl = StreamDef(field='maxl', shape=1,is_sparse=False)
+    text_source = CTFDeserializer(map_file_size, StreamDefs(
+        ext_values = StreamDef(field='size', shape=2,is_sparse=False),
     ))
         
-    return MinibatchSource(image_source,size_source)
+    return MinibatchSource([image_source,text_source])
 
 #https://docs.microsoft.com/en-us/cognitive-toolkit/brainscript-cntktextformat-reader
 #|A 0 1 2 3 4 |# a CTF comment

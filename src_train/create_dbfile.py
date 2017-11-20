@@ -7,6 +7,7 @@ Create image db file
 Uses class_map
 """
 
+training_id='20171120'
 
 import csv
 import numpy as np
@@ -18,8 +19,8 @@ import src_tools.file_helper as fh
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171114')
-count_threshold = 200
+cfg=train_params(data_dir,crop=True,training_id=training_id)
+count_threshold = 400
 
 image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)
 

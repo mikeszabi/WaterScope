@@ -69,30 +69,36 @@ def create_advanced_model(input, out_dims):
     
     return output_layer
 
-def create_model_size(input, size1, size2, out_dims):
+def create_model_ext(input, ext_values, out_dims):
     
-    convolutional_layer_1  = Convolution((7,7), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
+    # in VGG style
+    #https://www.cs.toronto.edu/~frossard/post/vgg16/
+    convolutional_layer_1_1  = Convolution((3,3), 16, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
+    convolutional_layer_1_2 = Convolution((5,5), 16, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_1_1)
+    pooling_layer_1 = MaxPooling((2,2), strides=(2,2))(convolutional_layer_1_2)
 
-    pooling_layer_1  = MaxPooling((2,2), strides=(2,2))(convolutional_layer_1)
+    convolutional_layer_2_1 = Convolution((3,3), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
+    convolutional_layer_2_2 = Convolution((7,7), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_2_1)
+    pooling_layer_2 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_2_2)
 
-    convolutional_layer_2 = Convolution((5,5), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
-    pooling_layer_2 = MaxPooling((2,2), strides=(2,2))(convolutional_layer_2)
+    convolutional_layer_3_1 = Convolution((3,3), 96, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
+    convolutional_layer_3_2 = Convolution((7,7), 96, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_3_1)
+    pooling_layer_3 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_3_2)
 
-    convolutional_layer_3 = Convolution((3,3), 96, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
-
-    pooling_layer_3 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_3)
+    convolutional_layer_4_1 = Convolution((3,3), 128, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_3)
+    pooling_layer_4 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_4_1)
 
 ##    
-    fully_connected_layer_1  = Dense(1024, init=glorot_uniform())(pooling_layer_3)
+    fully_connected_layer_1  = Dense(512, init=glorot_uniform())(pooling_layer_4)
+    dropout_layer_1 = Dropout(0.5)(fully_connected_layer_1)
     
-    with_size_info_1 = splice(fully_connected_layer_1,size1,axis=0)
-    with_size_info_2 = splice(with_size_info_1,size2,axis=0)
+    fully_connected_with_extra_values = splice(dropout_layer_1,ext_values,axis=0)
     
-    fully_connected_layer_2  = Dense(512, init=glorot_uniform())(with_size_info_2)
-    fully_connected_layer_3  = Dense(256, init=glorot_uniform())(fully_connected_layer_2)
+    fully_connected_layer_2  = Dense(256, init=glorot_uniform())(fully_connected_with_extra_values)
+    fully_connected_layer_3  = Dense(128, init=glorot_uniform())(fully_connected_layer_2)
+    dropout_layer_2= Dropout(0.5)(fully_connected_layer_3)
 
-    dropout_layer_1 = Dropout(0.5)(fully_connected_layer_3)
 
-    output_layer = Dense(out_dims, init=glorot_uniform(), activation=None)(dropout_layer_1)
+    output_layer = Dense(out_dims, init=glorot_uniform(), activation=None)(dropout_layer_2)
     
     return output_layer

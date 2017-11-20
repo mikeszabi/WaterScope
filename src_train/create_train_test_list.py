@@ -51,7 +51,7 @@ def get_stratified_train_test_inds(y,train_proportion=0.75):
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171114')
+cfg=train_params(data_dir,crop=True,training_id='20171119')
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 
 """
