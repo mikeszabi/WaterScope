@@ -12,6 +12,8 @@ Created on Thu Dec 22 13:29:36 2016
 @author: SzMike
 """
 
+#training_id='20171120'
+
 # https://github.com/Microsoft/CNTK/blob/v2.0.beta6.0/Tutorials/CNTK_201A_CIFAR-10_DataLoader.ipynb
 
 import pandas as pd
@@ -25,7 +27,7 @@ from src_train.train_config import train_params
 #%matplotlib inline
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171119')
+cfg=train_params(data_dir,crop=True,training_id=training_id)
 
 
 imgSize=64

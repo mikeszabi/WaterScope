@@ -10,6 +10,7 @@ Each classes used have to have enough observations (min_obs)
 creates type_dict
 """
 
+#training_id='20171120-All'
 
 import csv
 import pandas as pd
@@ -51,7 +52,7 @@ def get_stratified_train_test_inds(y,train_proportion=0.75):
 #data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id='20171119')
+cfg=train_params(data_dir,crop=True,training_id=training_id)
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 
 """
@@ -109,12 +110,14 @@ df_test_text=df_sizes.iloc[test_inds]
 """
 Do some stats
 """
+num_classes=len(df_labeled['category'].value_counts())
+
 classes_count_train=df_train_image['category'].value_counts()
 print(len(df_train_image))
 classes_count_test=df_test_image['category'].value_counts()
 print(len(df_test_image))
 # number of classes
-print(len(df_labeled['category'].value_counts()))
+print(num_classes)
 
 """
 Write train and test list
