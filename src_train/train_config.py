@@ -24,7 +24,7 @@ class train_params:
             self.db_file=os.path.join(self.curdb_dir,'Database.csv')
             self.classnames_file=os.path.join(self.curdb_dir,'class_count.csv')
             
-            self.merge_file=os.path.join(self.curdb_dir,'class_map_merge.csv')
+            self.merge_file=os.path.join(self.curdb_dir,'class_map.csv')
             
             self.train_dir=os.path.join(data_dir,'Training_'+training_id)
             supermakedirs(self.train_dir,0o777)

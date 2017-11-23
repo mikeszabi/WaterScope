@@ -105,50 +105,33 @@ cont_table.to_csv(os.path.join(cfg.train_dir,'cont_table.csv'))
 if write_misc:
     a=[i[1][0] for i in misclassified]
     for misc in misclassified:
-        save_file=os.path.join(data_dir,'misc',misc[1][0]+'___'+misc[0])
+        file_name,extension = os.path.splitext(misc[0])
+        save_file=os.path.join(data_dir,'Images','misc',misc[1]+'___'+misc[2]+extension)
         # "predicted label"___"original label"
         copyfile(misc[0],save_file)
+#        os.remove(save_file)
         print(misc)
     
 stats=multiclass_statistics(cont_table,macro=False)
 
-## Calculate statistical measures for multiclass classification
-## 1 vs. all single class approach
-## in cont_table rows are actual labels, cols are predictions!                
-#
-#num_classes=cont_table.shape[0]
-#n_obs=cont_table.sum().sum()
-#
-## Allocate memory
-#tp=[None]*num_classes # correct inclass lassification
-#tn=[None]*num_classes # correct outclass classification - 1 vs. all
-#fp=[None]*num_classes # incorrect inclass classification
-#fn=[None]*num_classes # incorrect outclass classification
-#
-## Calculate classification rates        
-#tp=[cont_table.iloc[i,i] for i in range(0,num_classes)] # correctly identified
-#fp=[-tp[i]+sum(cont_table.iloc[i,:]) for i in range(0,num_classes)] # incorrectly identified class members
-#fn=[-tp[i]+sum(cont_table.iloc[:,i]) for i in range(0,num_classes)] # incorrectly identified non-class members
-#tn=[n_obs-fp[i]-fn[i]-tp[i] for i in range(0,num_classes)] # correctly identified non-class members
-#
-## calculate statistics
-## recall - same as sensitivity
-#
-## 1., MACRO - all classes equally weighted
-#
-## MACRO - all classes equally weighted
-#precision=sum([(tp[i])/(tp[i]+fp[i]) for i in range(0,num_classes)])/num_classes
-#recall=sum([(tp[i])/(tp[i]+fn[i]) for i in range(0,num_classes)])/num_classes
-#specificity=sum([(tn[i])/(tn[i]+fp[i]) for i in range(0,num_classes)])/num_classes
-#avg_accuracy=sum([(tp[i]+tn[i])/(tp[i]+fn[i]+fp[i]+tn[i]) for i in range(0,num_classes)])/num_classes
-#
-## 2., MICRO - larger classes have more weight
-#precision=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fp[i]) for i in range(0,num_classes)])
-#recall=sum([(tp[i]) for i in range(0,num_classes)])/sum([(tp[i]+fn[i]) for i in range(0,num_classes)])
-#specificity=sum([(tn[i]) for i in range(0,num_classes)])/sum([(tn[i]+fp[i]) for i in range(0,num_classes)])
-#avg_accuracy=sum([(tp[i]) for i in range(0,num_classes)])/n_obs
-#
-#beta=1
-#fscore=(np.square(beta)+1)*precision*recall/(np.square(beta)*precision+recall)
-#
-#print
+##
+"""
+# check merged:
+
+print('Class map file: '+os.path.basename(cfg.merge_file))
+merge_dict={}
+with open(cfg.merge_file, mode='r') as infile:
+    reader = csv.reader(infile,delimiter=':')
+    next(reader,None) # skip header
+    for rows in reader:
+        if rows:
+            if rows[0][0]!='#':
+                merge_dict[rows[0]]=rows[1]
+
+for k,v in merge_dict.items():
+    cont_table.replace(k,v,inplace=True)
+classes_count=df_db['Class name'].value_counts()
+
+# print df.groupby('value')['tempx'].apply(' '.join).reset_index()
+
+"""

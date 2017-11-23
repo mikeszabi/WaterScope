@@ -7,7 +7,7 @@ Create image db file
 Uses class_map
 """
 
-training_id='20171120-Merged'
+training_id='20171121-All'
 
 import csv
 import numpy as np
