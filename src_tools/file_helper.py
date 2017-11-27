@@ -28,7 +28,10 @@ def imagelist_in_depth(image_dir,level=1):
             image_list_indir.extend(glob.glob(os.path.join(root, ext)))
     return image_list_indir
 
-def images2process_list_in_depth(measure_dir,file2check1=['settings-settings.xml','control.log'],file2check2=['(Measure).*(.xml)'],level=3):
+def images2process_list_in_depth(measure_dir,file2check1=['settings-settings.xml','control.log'],
+                                         file2check2=['(Measure).*(.xml)'],
+                                         file2exclude=['(hologram)'],
+                                         level=3):
     df_images2process=pd.DataFrame(columns=['root','dir1','dir2','image_file'])
     i_row=-1
     included_extenstions = ['png']
@@ -43,8 +46,8 @@ def images2process_list_in_depth(measure_dir,file2check1=['settings-settings.xml
                     fc=[f for f in files if regex.search(f)]
                     if not fc:
                         # not classifed yet
-                        #print(files)
-                        image_files=[f for f in files if set(included_extenstions).intersection(f.split('.'))]
+                        regex=re.compile(file2exclude[0],re.IGNORECASE)
+                        image_files=[f for f in files if set(included_extenstions).intersection(f.split('.')) and not regex.search(f)]
                         # ToDo: check date
                         if image_files:
                             for image_file in image_files:

@@ -22,7 +22,7 @@ from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 
 from skimage.color import rgb2gray
-from skimage.feature import blob_dog
+#from skimage.feature import blob_dog
 
 import numpy as np
 
@@ -38,7 +38,7 @@ def crop_edge(gray,pixel_per_micron=1.5):
     edges2 = morphology.binary_dilation(edges1,morphology.disk(11))
  
     bb=(0,0,gray.shape[0],gray.shape[1])
-    char_sizes=(max(gray.shape)/pixel_per_micron,min(gray.shape)/pixel_per_micron)
+    char_sizes=np.asarray((max(gray.shape)/pixel_per_micron,min(gray.shape)/pixel_per_micron))
     
     label_im=measure.label(edges2)
     props = measure.regionprops(label_im,intensity_image=1-gray)
@@ -50,8 +50,8 @@ def crop_edge(gray,pixel_per_micron=1.5):
         if prop_large.major_axis_length>min_extent_in_micron*pixel_per_micron:
             # min length in micron
             bb=prop_large.bbox
-            char_sizes=(prop_large.major_axis_length/pixel_per_micron,
-                        prop_large.minor_axis_length/pixel_per_micron)
+            char_sizes=np.asarray((prop_large.major_axis_length/pixel_per_micron,
+                        prop_large.minor_axis_length/pixel_per_micron))
 
     return bb,char_sizes
 
