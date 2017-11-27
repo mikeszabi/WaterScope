@@ -4,7 +4,6 @@ Created on Sun Jun 25 17:48:12 2017
 
 @author: SzMike
 """
-
 import os
 from pathlib import Path
 #from PIL import Image
@@ -14,19 +13,27 @@ from src_train.train_config import train_params
 import src_tools.file_helper as fh
 #import src_tools.file_helper as fh
 
+#==============================================================================
+# SET THESE PARAMETERS!
+#==============================================================================
+
+training_id='20171126-Gray'
+curdb_dir='cropped_gray_images'
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-#data_dir=os.path.join(r'E:\OneDrive\WaterScope')
-
-
-cfg=train_params(data_dir,crop=False,training_id='20171113')
-
 # cropped results are saved here
 save_dir=os.path.join(data_dir,'Images','tmp')
 
 #==============================================================================
+# RUN CONFIG
+#==============================================================================
+
+cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id=training_id)
+
+
+#==============================================================================
 # Create database using folder names
 #==============================================================================
-image_list=fh.imagelist_in_depth(cfg.imagedb_dir,level=1)
+image_list=fh.imagelist_in_depth(cfg.base_imagedb_dir,level=1)
 
 """
 Class names from folder names
@@ -71,7 +78,7 @@ for i, image_file in enumerate(image_list):
                         
             for alpha in [0,90,180,270]:
                 img_rot=img_square.rotate(alpha, expand=True)
-                crop_file=os.path.join(cfg.imagecrop_dir,category,
+                crop_file=os.path.join(cfg.curdb_dir,category,
                                        Path(image_file).resolve().stem+'__'+str(alpha)+'.png')
                 img_rot.save(crop_file)
         else:

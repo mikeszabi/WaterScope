@@ -7,38 +7,42 @@ Created on Tue Jun 27 07:54:05 2017
 Test result on test list
 
 """
-#training_id='20171120-All'
-#num_classes  = 23
+#training_id='20171126-Gray'
 
 from shutil import copyfile
-import warnings
 import csv
 import pandas as pd
 import os
 from collections import OrderedDict
 import numpy as np
-import skimage.io as io
-io.use_plugin('pil') # Use only the capability of PIL
-from skimage.transform import resize
-from skimage import img_as_ubyte
-from cntk import load_model
+from PIL import Image
+
 
 from src_train.train_config import train_params
 from src_train.multiclass_stats import multiclass_statistics
+import classifications
 
-
+#=============================================================================
+# SET THESE PARAMETERS!
+#==============================================================================
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id=training_id)
-typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
-model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
+# model dimensions
 
-
-model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
-user='picturio'
-imgSize=64
+image_height = 64
+image_width  = 64
+num_channels = 3
+numFeature = image_height * image_width * num_channels
 
 write_misc=False
 
+#==============================================================================
+# RUN CONFIG
+#==============================================================================
+
+cfg=train_params(data_dir,training_id=training_id)
+
+typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
+model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
 
 
 type_dict={}
@@ -51,11 +55,9 @@ sorted_classes= OrderedDict(sorted(type_dict.items(), key=lambda x:x[1])).values
 
 
 # LOAD MODEL
-pred=load_model(model_file)
+cnn_class=classifications.cnn_classification(model_file,image_height = image_height, image_width  = image_width)
 
-
-image_mean   = 128
-
+num_classes=cnn_class.pred.output.shape[0]
 
 df_test_image = pd.read_csv(cfg.test_image_list_file,delimiter=';')
 df_test_text = pd.read_csv(cfg.test_text_list_file,delimiter=';')
@@ -72,20 +74,9 @@ for i, row in df_test_image.iterrows():
     maxl=np.asarray([df_test_text.iloc[i]['maxl']]).astype('float32')[0]
     minl=np.asarray([df_test_text.iloc[i]['minl']]).astype('float32')[0]
    
-
-    im=io.imread(image_file)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        data = img_as_ubyte(resize(im, (imgSize,imgSize), order=1))
-    rgb_image=data.astype('float32')
-    rgb_image  -= image_mean
-    bgr_image = rgb_image[..., [2, 1, 0]]
-    pic = np.ascontiguousarray(np.rollaxis(bgr_image, 2))
-
-       
-    result  = np.round(np.squeeze(pred.eval({pred.arguments[0]:[pic],
-                                             pred.arguments[1]:[[maxl,minl]]}))*100)
-    predicted_label=np.argmax(result)
+    img=Image.open(image_file)
+   
+    predicted_label, predicted_prob=cnn_class.classify(img, char_sizes=(maxl, minl))
     contingency_table[label,predicted_label]+=1
     # rows are actual labels, cols are predictions,                  
     if predicted_label  != label:
@@ -119,18 +110,46 @@ stats=multiclass_statistics(cont_table,macro=False)
 # check merged:
 
 print('Class map file: '+os.path.basename(cfg.merge_file))
-merge_dict={}
-with open(cfg.merge_file, mode='r') as infile:
+
+merge_file_1=os.path.join(r'C:\\Users\\picturio\\OneDrive\\WaterScope\\Images\\cropped_images','class_map_merge.csv')
+merge_file_0=os.path.join(r'C:\\Users\\picturio\\OneDrive\\WaterScope\\Images\\cropped_images','class_map.csv')
+
+merge_dict_0={}
+with open(merge_file_0, mode='r') as infile:
     reader = csv.reader(infile,delimiter=':')
     next(reader,None) # skip header
     for rows in reader:
         if rows:
             if rows[0][0]!='#':
-                merge_dict[rows[0]]=rows[1]
+                merge_dict_0[rows[0]]=rows[1]
+                
+merge_dict_1={}
+with open(merge_file_1, mode='r') as infile:
+    reader = csv.reader(infile,delimiter=':')
+    next(reader,None) # skip header
+    for rows in reader:
+        if rows:
+            if rows[0][0]!='#':
+                merge_dict_1[rows[0]]=rows[1]
+                
+merge_dict={}
+for k,v in merge_dict_0.items():
+    merge_dict[v]=merge_dict_1[k]
+    
+cont_table_man_merge=cont_table.copy()
 
 for k,v in merge_dict.items():
-    cont_table.replace(k,v,inplace=True)
+    cont_table_man_merge.rename(columns = {k:v},inplace=True)
+    cont_table_man_merge.rename(index = {k:v},inplace=True)
 classes_count=df_db['Class name'].value_counts()
+
+cont_table_man_merge.groupby(index)
+
+tmp_1=cont_table_man_merge.groupby(level=0).sum()
+tmp_2=pd.DataFrame()
+for taxon in tmp_1.index:
+    tmp_2[taxon]=tmp_1[[taxon]].sum(axis=1)
+
 
 # print df.groupby('value')['tempx'].apply(' '.join).reset_index()
 

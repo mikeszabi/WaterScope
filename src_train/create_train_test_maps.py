@@ -12,7 +12,7 @@ Created on Thu Dec 22 13:29:36 2016
 @author: SzMike
 """
 
-#training_id='20171120'
+#training_id='20171126-Gray'
 
 # https://github.com/Microsoft/CNTK/blob/v2.0.beta6.0/Tutorials/CNTK_201A_CIFAR-10_DataLoader.ipynb
 
@@ -27,19 +27,26 @@ from src_train.train_config import train_params
 #%matplotlib inline
 
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id=training_id)
+
+#==============================================================================
+# SET THESE PARAMETERS!
+#==============================================================================
+data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+image_height = 64
+image_width  = 64
+num_channels = 3
+numFeature = image_height * image_width * num_channels
+
+#==============================================================================
+# RUN CONFIG
+#==============================================================================
 
 
-imgSize=64
-nCh=3
-numFeature = imgSize * imgSize * 3
-
+cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id=training_id)
 
 train_map_o=os.path.join(cfg.train_dir,'train_map.txt')
 test_map_o=os.path.join(cfg.train_dir,'test_map.txt')
-
 #train_regr_labels=os.path.join(train_dir,'train_regrLabels.txt')
-
 data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
 
 
@@ -72,22 +79,22 @@ def saveText_row(maxl,minl,mapFile):
     mapFile.write('|size '+str(maxl)+' '+str(minl)+'\n')
 
 #    
-def saveMean(fname, data):
-    root = et.Element('opencv_storage')
-    et.SubElement(root, 'Channel').text = '3'
-    et.SubElement(root, 'Row').text = str(imgSize)
-    et.SubElement(root, 'Col').text = str(imgSize)
-    meanImg = et.SubElement(root, 'MeanImg', type_id='opencv-matrix')
-    et.SubElement(meanImg, 'rows').text = '1'
-    et.SubElement(meanImg, 'cols').text = str(imgSize * imgSize * 3)
-    et.SubElement(meanImg, 'dt').text = 'f'
-    et.SubElement(meanImg, 'data').text = ' '.join(['%e' % n for n in np.reshape(data, (imgSize * imgSize * 3))])
-
-    tree = et.ElementTree(root)
-    tree.write(fname)
-    x = xml.dom.minidom.parse(fname)
-    with open(fname, 'w') as f:
-        f.write(x.toprettyxml(indent = '  '))
+#def saveMean(fname, data):
+#    root = et.Element('opencv_storage')
+#    et.SubElement(root, 'Channel').text = str(num_channels)
+#    et.SubElement(root, 'Row').text = str(image_height)
+#    et.SubElement(root, 'Col').text = str(image_width)
+#    meanImg = et.SubElement(root, 'MeanImg', type_id='opencv-matrix')
+#    et.SubElement(meanImg, 'rows').text = '1'
+#    et.SubElement(meanImg, 'cols').text = str(numFeature)
+#    et.SubElement(meanImg, 'dt').text = 'f'
+#    et.SubElement(meanImg, 'data').text = ' '.join(['%e' % n for n in np.reshape(data, (numFeature))])
+#
+#    tree = et.ElementTree(root)
+#    tree.write(fname)
+#    x = xml.dom.minidom.parse(fname)
+#    with open(fname, 'w') as f:
+#        f.write(x.toprettyxml(indent = '  '))
 
 def saveImages(filename, train_dir,map_type='train'):
     
@@ -105,9 +112,9 @@ def saveImages(filename, train_dir,map_type='train'):
            
             saveImage_row(fname, label, mapFile)
     
-    if map_type=='train' :
-        dataMean = 128*np.ones((3, imgSize, imgSize))
-        saveMean(os.path.join(train_dir,'data_mean.xml'), dataMean)
+#    if map_type=='train' :
+#        dataMean = 128*np.ones((num_channels, image_height, image_width))
+#        saveMean(os.path.join(train_dir,'data_mean.xml'), dataMean)
         
 def saveTexts(filename, train_dir,map_type='train'):
     
@@ -124,12 +131,6 @@ def saveTexts(filename, train_dir,map_type='train'):
             minl=int(row['minl'])
            
             saveText_row(maxl, minl, mapFile)
-    
-    if map_type=='train' :
-        dataMean = 128*np.ones((3, imgSize, imgSize))
-        saveMean(os.path.join(train_dir,'data_mean.xml'), dataMean)
-
-
 
 print ('Converting train data to png images...')
 saveImages(cfg.train_image_list_file,cfg.train_dir,map_type='train')

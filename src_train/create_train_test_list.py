@@ -49,10 +49,18 @@ def get_stratified_train_test_inds(y,train_proportion=0.75):
 
 
 
-#data_dir=os.path.join(r'E:\OneDrive\WaterScope')
-
+#==============================================================================
+# SET THESE PARAMETERS!
+#==============================================================================
+curdb_dir='cropped_gray_images'
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id=training_id)
+
+#==============================================================================
+# RUN CONFIG
+#==============================================================================
+
+
+cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id=training_id)
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 
 """

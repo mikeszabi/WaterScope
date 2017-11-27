@@ -4,9 +4,8 @@ Created on Fri Dec 23 21:42:51 2016
 
 @author: picturio
 """
-
-#training_id='20171120-Merged'
-#num_classes  = 18
+#training_id='20171126-Gray'
+#num_classes  = 30
     
 import os
 import numpy as np
@@ -18,16 +17,45 @@ from cntk import Trainer, UnitType
 from cntk import momentum_sgd, learning_rate_schedule, momentum_as_time_constant_schedule
 #from cntk.learners import momentum_schedule
 from cntk.logging import log_number_of_parameters, ProgressPrinter, TensorBoardProgressWriter
-
+from cntk.ops import minus
 
 from src_train.model_functions import create_model_ext
 from src_train.train_config import train_params
 from src_train.readers import create_reader_with_ext_values
 #from src_train.readers import create_reader
 
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id=training_id)
 
+#==============================================================================
+# SET THESE PARAMETERS!
+#==============================================================================
+data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+# model dimensions
+
+image_height = 64
+image_width  = 64
+num_channels = 3
+numFeature = image_height * image_width * num_channels
+
+#==============================================================================
+# SET training parameters
+#==============================================================================
+max_epochs=150
+model_func=create_model_ext
+
+epoch_size     = 48000 # training
+minibatch_size = 128 # training
+
+#==============================================================================
+# RUN CONFIG
+#==============================================================================
+
+
+cfg=train_params(data_dir,training_id=training_id)
+
+train_map_o=os.path.join(cfg.train_dir,'train_map.txt')
+test_map_o=os.path.join(cfg.train_dir,'test_map.txt')
+#train_regr_labels=os.path.join(train_dir,'train_regrLabels.txt')
+data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
 model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
 model_temp_file=os.path.join(cfg.train_dir,'cnn_model_temp.dnn')
 train_log_file=os.path.join(cfg.train_log_dir,'progress_log.txt')
@@ -37,13 +65,6 @@ test_map_image=os.path.join(cfg.train_dir,'test_map_image.txt')
 train_map_text=os.path.join(cfg.train_dir,'train_map_text.txt')
 test_map_text=os.path.join(cfg.train_dir,'test_map_text.txt')
 
-data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
-
-# model dimensions
-
-image_height = 64
-image_width  = 64
-num_channels = 3
 
 #
 # Evaluation action
@@ -112,26 +133,22 @@ def evaluate_test(input_map,reader_test,trainer,plot_data,epoch_size = 16000, mi
 reader_train = create_reader_with_ext_values(train_map_image, train_map_text, data_mean_file, True, image_height=image_height, image_width=image_width, num_channels=num_channels, num_classes=num_classes)
 reader_test  = create_reader_with_ext_values(test_map_image, test_map_text,data_mean_file, False,  image_height=image_height, image_width=image_width, num_channels=num_channels, num_classes=num_classes)
 
-#==============================================================================
-# SET parameters
-#==============================================================================
-max_epochs=150
-model_func=create_model_ext
 
-epoch_size     = 48000 # training
-minibatch_size = 128 # training
 
 #==============================================================================
 # ###
 #==============================================================================
-input_var = input_variable((num_channels, image_height, image_width))
-#size_var = input_variable((2,1,1))
-label_var = input_variable((num_classes))
-size_var = input_variable((2))
 # Normalize the inputs
 feature_scale = 1.0 / 256.0
 l_scale = 1.0 / 1000.0
-input_var_norm = element_times(feature_scale, input_var)
+
+
+input_var = input_variable((num_channels, image_height, image_width))
+input_var_mean = minus(input_var,128)
+input_var_norm = element_times(feature_scale, input_var_mean)
+
+label_var = input_variable((num_classes))
+size_var = input_variable((2))
 size_var_norm =  element_times(l_scale, size_var)
 
 # apply model to input

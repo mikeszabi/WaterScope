@@ -7,7 +7,6 @@ Create image db file
 Uses class_map
 """
 
-training_id='20171121-All'
 
 import csv
 import numpy as np
@@ -16,17 +15,28 @@ import os
 from src_train.train_config import train_params
 import src_tools.file_helper as fh
 
+#==============================================================================
+# SET THESE PARAMETERS!
+#==============================================================================
 
+training_id='20171127-All'
+curdb_dir='cropped_images'
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-#data_dir=os.path.join(r'E:\OneDrive\WaterScope')
-cfg=train_params(data_dir,crop=True,training_id=training_id)
 count_threshold = 75*4
 
-image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)
+
+#==============================================================================
+# RUN CONFIG
+#==============================================================================
+
+cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id=training_id)
+
 
 """
 Class names from folder names
 """
+image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)
+
 file_names=[f for f in image_list]
 class_names=[os.path.dirname(f).split('\\')[-1] for f in image_list]
 df_db = pd.DataFrame(data={'Filename':file_names,'Class name':class_names})
@@ -44,7 +54,7 @@ classes_count=df_db['Class name'].value_counts()
 """
 Adding size info
 """
-size_file=os.path.join(cfg.imagedb_dir,'char_sizes.txt')
+size_file=os.path.join(cfg.curdb_dir,'char_sizes.txt')
 
 df_char_size=pd.read_csv(size_file,delimiter=';')
 minl=[]
@@ -86,7 +96,8 @@ elim_dict={}
 
 value_counts = df_db['Class name'].value_counts() # Entire DataFrame 
 to_remove = value_counts[value_counts <= count_threshold].index
-df_db.replace(to_remove, class_name_low_count, inplace=True)
+if not to_remove.empty:
+    df_db.replace(to_remove, class_name_low_count, inplace=True)
 
 df_db.to_csv(cfg.db_file,sep=';',index=None)
 

@@ -74,15 +74,15 @@ def create_model_ext(input, ext_values, out_dims):
     # in VGG style
     #https://www.cs.toronto.edu/~frossard/post/vgg16/
     convolutional_layer_1_1  = Convolution((3,3), 16, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(input)
-    convolutional_layer_1_2 = Convolution((5,5), 16, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_1_1)
+    convolutional_layer_1_2 = Convolution((5,5), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_1_1)
     pooling_layer_1 = MaxPooling((2,2), strides=(2,2))(convolutional_layer_1_2)
 
     convolutional_layer_2_1 = Convolution((3,3), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_1)
-    convolutional_layer_2_2 = Convolution((7,7), 32, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_2_1)
+    convolutional_layer_2_2 = Convolution((7,7), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_2_1)
     pooling_layer_2 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_2_2)
 
     convolutional_layer_3_1 = Convolution((3,3), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_2)
-    convolutional_layer_3_2 = Convolution((7,7), 64, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_3_1)
+    convolutional_layer_3_2 = Convolution((7,7), 96, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(convolutional_layer_3_1)
     pooling_layer_3 = MaxPooling((2,2), strides=(1,1))(convolutional_layer_3_2)
 
     convolutional_layer_4_1 = Convolution((3,3), 96, init=glorot_uniform(), activation=relu, pad=True, strides=(1,1))(pooling_layer_3)

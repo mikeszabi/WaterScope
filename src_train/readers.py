@@ -9,10 +9,7 @@ from cntk.io import MinibatchSource, ImageDeserializer, CTFDeserializer, StreamD
 #
 # Define the reader for both training and evaluation action.
 #
-image_height = 64
-image_width  = 64
-num_channels = 3
-num_classes  = 32
+
 
 def create_reader(map_file, mean_file, train, image_height=64, image_width=64, num_channels=3, num_classes=32):
   
@@ -25,7 +22,7 @@ def create_reader(map_file, mean_file, train, image_height=64, image_width=64, n
         ]
     trs += [
         transforms.scale(width=image_width, height=image_height, channels=num_channels, interpolations='linear'),
-        transforms.mean(mean_file)
+#        transforms.mean(mean_file)
     ]
     # deserializer
     image_source=ImageDeserializer(map_file, StreamDefs(
@@ -47,7 +44,7 @@ def create_reader_with_ext_values(map_file_image, map_file_size, mean_file_image
         ]
     trs += [
         transforms.scale(width=image_width, height=image_height, channels=num_channels, interpolations='linear'),
-        transforms.mean(mean_file_image)
+#        transforms.mean(mean_file_image)
     ]
     # deserializer
     image_source=ImageDeserializer(map_file_image, StreamDefs(
