@@ -21,7 +21,7 @@ training_id='dummy'
 curdb_dir='cropped_images'
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 # cropped results are saved here
-save_dir=os.path.join(data_dir,'Images','cropped_gray_images')
+save_dir=os.path.join(data_dir,'Images','cropped_green_images')
 
 #==============================================================================
 # RUN CONFIG
@@ -54,13 +54,15 @@ for i, image_file in enumerate(image_list):
     if not row.empty:
         category=row['Class name'].values[0]
         img = Image.open(image_file)
-        img_gray=img.convert('L')
+        img_rgb=img.convert('RGB')
+        #img_gray=img.convert('L')
+        img_red, img_green, img_blue = img_rgb.split()
         
         cat_dir=os.path.join(save_dir,category)
         if not os.path.exists(cat_dir):
             os.makedirs(cat_dir)
         crop_file=os.path.join(cat_dir, os.path.basename(image_file))
-        img_gray.save(crop_file)
+        img_green.save(crop_file)
 
      
     else:        

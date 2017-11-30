@@ -4,9 +4,11 @@ Created on Fri Dec 23 21:42:51 2016
 
 @author: picturio
 """
-#training_id='20171126-Gray'
-#num_classes  = 30
-    
+"""
+training_id='20171128-Green'
+num_classes  = 30
+"""   
+ 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,7 +21,7 @@ from cntk import momentum_sgd, learning_rate_schedule, momentum_as_time_constant
 from cntk.logging import log_number_of_parameters, ProgressPrinter, TensorBoardProgressWriter
 from cntk.ops import minus
 
-from src_train.model_functions import create_model_ext
+from src_train.model_functions import create_model_ext2
 from src_train.train_config import train_params
 from src_train.readers import create_reader_with_ext_values
 #from src_train.readers import create_reader
@@ -33,14 +35,14 @@ data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 
 image_height = 64
 image_width  = 64
-num_channels = 3
+num_channels = 1
 numFeature = image_height * image_width * num_channels
 
 #==============================================================================
 # SET training parameters
 #==============================================================================
 max_epochs=150
-model_func=create_model_ext
+model_func=create_model_ext2
 
 epoch_size     = 48000 # training
 minibatch_size = 128 # training
@@ -236,8 +238,8 @@ for epoch in range(max_epochs):       # loop over epochs
         trainer.save_checkpoint(model_temp_file)
         eval_errors.append(evaluate_test(input_map,reader_test,trainer,plot_data,
                           epoch_size=int(((1-cfg.trainRatio)/cfg.trainRatio)*epoch_size)))
-        if len(eval_errors)>1:
-            if eval_errors[-2]<eval_errors[-1]:
+        if len(eval_errors)>2:
+            if eval_errors[-2]<eval_errors[-1] and eval_errors[-3]<eval_errors[-2]:
                 print('reached max learning')
                 break
 

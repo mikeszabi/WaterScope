@@ -19,8 +19,8 @@ import src_tools.file_helper as fh
 # SET THESE PARAMETERS!
 #==============================================================================
 
-training_id='20171127-All'
-curdb_dir='cropped_images'
+training_id='20171128-Green'
+curdb_dir='cropped_green_images'
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 count_threshold = 75*4
 
