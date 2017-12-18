@@ -23,7 +23,7 @@
         <num_channel>3</num_channel>
     </neural>
     <processing>       
-        <auto_start>False</auto_start>
+        <auto_start>True</auto_start>
     	 <delete_files>False</delete_files>
     </processing>
 </config>

@@ -6,6 +6,7 @@ Created on Mon Aug 28 19:59:11 2017
 """
 
 import tkinter as tk
+from tkinter import ttk
 from tkinter.filedialog import askdirectory
 import csv
 import time
@@ -15,6 +16,9 @@ import xml.etree.ElementTree as ET
 from src_tools.file_helper import read_log, images2process_list_in_depth, check_folder
 import classifications
 from src_tools.results2xml import XMLWriter
+
+import queue
+import threading
 
 #import sys
 #import logging
@@ -76,24 +80,13 @@ class params:
             for i in range(100):
                 type_dict[str(i)]=str(i)
         return type_dict
-                                     
-
-class Application(tk.Frame):
-    #running=False
-    running_states=('running','stopped','test')
-    running_state='stopped'
-    cur_folder='.'
-       
-    def __init__(self, master=None):
+                          
+            
+class process:
+    def __init__(self):
         self.params=params()
-        if not self.params.dirs:
-            print('config file - failed to load')
-            return
-
-        tk.Frame.__init__(self, master, background="yellow")
-        self.pack(fill="both", expand=True)
-        self.createWidgets()
-        
+        self.cur_progress=0;
+        self.elapsed=0;
         if not self.params.files['model_trash']=='None':
             self.cnn_trash=classifications.cnn_classification(self.params.files['model_trash'],
                                                               im_height=self.params.neural['im_height'],
@@ -103,6 +96,78 @@ class Application(tk.Frame):
                                                               im_height=self.params.neural['im_height'],
                                                               im_width=self.params.neural['im_width'])
         print('load model '+self.params.files['model_taxon'])
+        
+    def process_oneimage(self,image_file):
+        if not self.params.files['model_trash']=='None':
+            img, dummy = classifications.create_image(image_file,cropped=False)
+            predicted_label, prob_trash = self.cnn_trash.classify(img,char_sizes=None)
+        else:
+            prob_trash=100
+            predicted_label=1
+        if predicted_label==0:
+            # TRASH goes to Recycle bin
+            predicted_type=self.params.type_dict_trash[str(predicted_label)]
+            prob_taxon=0 # use np.NaN instead
+#            self.text.insert(tk.END, 'TRASH model result : '+'type : '+predicted_type+' ; prob : '+str(prob_trash)+'\n')
+#            self.text.see(tk.END)
+        else:
+            # NOT TRASH
+            img, char_sizes = classifications.create_image(image_file,cropped=True)
+            predicted_label, prob_taxon = self.cnn_taxon.classify(img,char_sizes=char_sizes)
+            predicted_type=self.params.type_dict_taxon[str(predicted_label)]
+#            self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob_taxon)+'\n')
+#            self.text.see(tk.END)
+            
+        return predicted_type, prob_trash, prob_taxon
+    
+    def process_image_list(self,thread_queue=None,df_images2process=None):
+    
+        df_images_processed=df_images2process.copy()
+        df_images_processed['predicted_type']=None
+        df_images_processed['prob_trash']=None
+        df_images_processed['prob_taxon']=None
+        n_images2process=len(df_images2process)
+        t=time.time()
+        for index, fo in df_images2process.iterrows():
+       
+#        self.text.insert(tk.END, 'processing : '+fo['image_file']+'\n')
+        
+            self.cur_progress=float(index)/float(n_images2process)
+            image_fullfile=os.path.join(fo['root'],fo['image_file'])
+            
+            predicted_type, prob_trash, prob_taxon=self.process_oneimage(image_fullfile)
+            
+            df_images_processed['predicted_type'][index]=predicted_type
+            df_images_processed['prob_trash'][index]=prob_trash
+            df_images_processed['prob_taxon'][index]=prob_taxon
+                    
+        # put result to queue when finished
+        self.elapsed=time.time() - t
+        thread_queue.put(df_images_processed)
+
+           
+
+class Application(tk.Frame):
+    #running=False
+    running_states=('checking','running','stopped','test')
+    running_state='stopped'
+    proc_modes=('ws','test')
+    proc_mode='ws'
+    cur_folder='.'
+    test_dir=cur_folder
+       
+    def __init__(self, master=None):
+        self.params=params()
+        if not self.params.dirs:
+            print('config file - failed to load')
+            return
+        
+        
+        tk.Frame.__init__(self, master, background="yellow")
+        self.pack(fill="both", expand=True)
+        self.createWidgets()
+        
+        self.process=process()
         
         if self.params.processing['auto_start']=='True':
             self.start()
@@ -133,9 +198,14 @@ class Application(tk.Frame):
         self.date_entry.pack(fill=tk.X, side=tk.LEFT)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
         
-        self.state_entry = tk.Entry(self, bg='red')
+        self.state_entry = tk.Entry(self, bg='yellow')
         self.state_entry.pack(fill=tk.Y, side=tk.RIGHT)
         self.state_entry.insert(0, self.running_state)
+        
+        self.progress = ttk.Progressbar(self, orient='horizontal',
+                                        length=200, mode='determinate')
+        self.progress.pack(fill=tk.Y, side=tk.RIGHT)
+        self.progress['maximum'] = 1
         
         test_button = tk.Button(separator, text="TEST", command=self.test, width=10)
         test_button.pack(side=tk.RIGHT)
@@ -161,7 +231,8 @@ class Application(tk.Frame):
         
     def test(self):
         if self.running_state=='stopped':
-            self.change_state('test')
+            self.change_state('checking')
+            self.proc_mode='test'
             self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'test processing\n')
             self.text.see(tk.END)
             self.onTest()
@@ -169,7 +240,8 @@ class Application(tk.Frame):
         
     def start(self):
         if self.running_state=='stopped':
-            self.change_state('running')
+            self.change_state('checking')
+            self.proc_mode='ws'
             self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'start processing\n')
             self.text.see(tk.END)
             # check and create result folder
@@ -184,7 +256,7 @@ class Application(tk.Frame):
             self.onUpdate()
 
     def stop(self):
-        if self.running_state=='running':
+        if self.running_state=='checking':
             self.change_state('stopped')
             self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'stop processing\n')
             self.text.see(tk.END)
@@ -195,21 +267,25 @@ class Application(tk.Frame):
         self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
      
     def onTest(self):
-        test_dir=askdirectory()
-        self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'processing: '+test_dir+'\n')
+        self.test_dir=askdirectory()
+        self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'processing: '+self.test_dir+'\n')
         self.text.see(tk.END)
 #       measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
         # get list of images to process
-        if os.path.exists(test_dir):
-            df_images2process=images2process_list_in_depth(test_dir,file2check1=[],file2check2=['dummy'],level=1)
+        if os.path.exists(self.test_dir):
+            df_images2process=images2process_list_in_depth(self.test_dir,file2check1=[],file2check2=['dummy'],level=1)
             if not df_images2process.empty:
-                df_images_processed=self.process_measure(df_images2process)  
-                print(df_images_processed)
-                self.date_entry.delete(0, tk.END)
-                self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'TEST directory is processed\n')
-                 
+                self.text.insert(tk.END, str(len(df_images2process))+' images are being processed\n')
+            
+                self.thread_queue = queue.Queue()
+                self.thread = threading.Thread(target=self.process.process_image_list, args=(self.thread_queue, df_images2process))
+                self.change_state('running')
+
+                self.thread.start()
+                self.after(100, self.listen_for_result)
+                
                 # write to csv
-                df_images_processed.to_csv(os.path.join(test_dir,'classification_result.csv'),index=False)
+                
                     
         self.date_entry.delete(0, tk.END)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
@@ -223,64 +299,48 @@ class Application(tk.Frame):
                                                                file2exclude=[self.params.files['hologram']],
                                                                level=3)
         if not df_images2process.empty:
-            t=time.time()
-            df_images_processed=self.process_measure(df_images2process)  
-            self.create_output(df_images_processed)
+#            t=time.time()
+            self.text.insert(tk.END, str(len(df_images2process))+' images are being processed\n')
             
-            elapsed = time.time() - t
-            
-            self.text.insert(tk.END, str(df_images_processed.shape[0])+' images were processed in '+
-                                         str("{0:.2f}".format(elapsed))+' secs\n')
-            
-            self.text.see(tk.END)
+            self.thread_queue = queue.Queue()
+            self.thread = threading.Thread(target=self.process.process_image_list, args=(self.thread_queue, df_images2process))
+            self.change_state('running')
+
+            self.thread.start()
+            self.after(100, self.listen_for_result)
         
         self.date_entry.delete(0, tk.END)
         self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%H:%M:%S"))
              
-        if self.running_state=='running':
+        if self.running_state=='checking':
             self.after(1000,self.onUpdate)
     
-    def process_oneimage(self,image_file):
-        if not self.params.files['model_trash']=='None':
-            img, dummy = classifications.create_image(image_file,cropped=False)
-            predicted_label, prob_trash = self.cnn_trash.classify(img,char_sizes=None)
-        else:
-            prob_trash=100
-            predicted_label=1
-        if predicted_label==0:
-            # TRASH goes to Recycle bin
-            predicted_type=self.params.type_dict_trash[str(predicted_label)]
-            prob_taxon=0 # use np.NaN instead
-            self.text.insert(tk.END, 'TRASH model result : '+'type : '+predicted_type+' ; prob : '+str(prob_trash)+'\n')
+    def listen_for_result(self):
+        '''
+        Check if there is something in the queue
+        '''
+        try:
+            df_images_processed = self.thread_queue.get(0)
+            if self.proc_mode=='test':
+                df_images_processed.to_csv(os.path.join(self.test_dir,'classification_result.csv'),index=False)
+            else:
+                self.create_output(df_images_processed)
+            self.thread_queue.task_done()
+            self.change_state('checking')
+            
+#            elapsed = time.time() - t
+            self.progress['value']=1
+            self.text.insert(tk.END, str(df_images_processed.shape[0])+' images were processed in '+
+                                         str("{0:.2f}".format(self.process.elapsed))+' secs\n')
+            
             self.text.see(tk.END)
-        else:
-            # NOT TRASH
-            img, char_sizes = classifications.create_image(image_file,cropped=True)
-            predicted_label, prob_taxon = self.cnn_taxon.classify(img,char_sizes=char_sizes)
-            predicted_type=self.params.type_dict_taxon[str(predicted_label)]
-            self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob_taxon)+'\n')
-            self.text.see(tk.END)
+            self.after(100,self.onUpdate)
             
-        return predicted_type, prob_trash, prob_taxon
-            
-    def process_measure(self,df_images2process):
-        df_images_processed=df_images2process.copy()
-        df_images_processed['predicted_type']=None
-        df_images_processed['prob_trash']=None
-        df_images_processed['prob_taxon']=None
-        for index, fo in df_images2process.iterrows():
-           
-            self.text.insert(tk.END, 'processing : '+fo['image_file']+'\n')
-            
-            image_fullfile=os.path.join(fo['root'],fo['image_file'])
-            
-            predicted_type, prob_trash, prob_taxon=self.process_oneimage(image_fullfile)
-            
-            df_images_processed['predicted_type'][index]=predicted_type
-            df_images_processed['prob_trash'][index]=prob_trash
-            df_images_processed['prob_taxon'][index]=prob_taxon
-                        
-        return df_images_processed
+        except queue.Empty:
+            self.change_state('running')
+            self.progress['value']=self.process.cur_progress
+            self.after(1000, self.listen_for_result)
+    
         
     def create_output(self,df_images_processed):
 
