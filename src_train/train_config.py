@@ -14,7 +14,7 @@ class train_params:
     
     def __init__(self,data_dir='C:',curdb_dir='cropped_gray_images',training_id=''):
         if os.path.exists(data_dir):
-            self.base_imagedb_dir=os.path.join(data_dir,'Images','db_categorized')
+            self.base_imagedb_dir=os.path.join(data_dir,'Images','db_korea')
             self.curdb_dir=os.path.join(data_dir,'Images',curdb_dir)
                 
             self.train_dir=os.path.join(data_dir,'Training_'+training_id)    

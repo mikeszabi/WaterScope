@@ -17,8 +17,8 @@ import src_tools.file_helper as fh
 # SET THESE PARAMETERS!
 #==============================================================================
 
-training_id='20171126-Gray'
-curdb_dir='cropped_gray_images'
+training_id='20171218'
+curdb_dir='cropped_korea_images'
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 # cropped results are saved here
 save_dir=os.path.join(data_dir,'Images','tmp')
@@ -46,7 +46,6 @@ df_db = pd.DataFrame(data={'Filename':image_list,'Class name':class_names})
 #==============================================================================
 #df = pd.read_csv(cfg.db_file,delimiter=';')
 #image_list=list(df_db['Filename'])
-image_list=fh.imagelist_in_depth(cfg.imagedb_dir,level=1)
 
 char_size_dict={}
 for i, image_file in enumerate(image_list):
@@ -71,18 +70,18 @@ for i, image_file in enumerate(image_list):
         except:
             print('loading error: '+image_file)
         
-        if img_square:
-            cat_dir=os.path.join(cfg.imagecrop_dir,category)
-            if not os.path.exists(cat_dir):
-                os.makedirs(cat_dir)
-                        
-            for alpha in [0,90,180,270]:
-                img_rot=img_square.rotate(alpha, expand=True)
-                crop_file=os.path.join(cfg.curdb_dir,category,
-                                       Path(image_file).resolve().stem+'__'+str(alpha)+'.png')
-                img_rot.save(crop_file)
-        else:
-            print('crop problem: '+image_file)   
+#        if img_square:
+#            cat_dir=os.path.join(cfg.curdb_dir,category)
+#            if not os.path.exists(cat_dir):
+#                os.makedirs(cat_dir)
+#                        
+#            for alpha in [0,90,180,270]:
+#                img_rot=img_square.rotate(alpha, expand=True)
+#                crop_file=os.path.join(cfg.curdb_dir,category,
+#                                       Path(image_file).resolve().stem+'__'+str(alpha)+'.png')
+#                img_rot.save(crop_file)
+#        else:
+#            print('crop problem: '+image_file)   
     else:        
         print('not in db: '+image_file)   
 
@@ -102,5 +101,5 @@ for k,v in char_size_dict.items():
     
 pd_char_size=pd.DataFrame(data={'Filename':file_names,'Class name':class_names,'maxl':maxl,'minl':minl})
                       
-size_file=os.path.join(cfg.imagedb_dir,'char_sizes.txt')
+size_file=os.path.join(cfg.base_imagedb_dir,'char_sizes.txt')
 pd_char_size.to_csv(size_file,sep=';',index=None)

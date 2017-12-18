@@ -137,10 +137,11 @@ reader_test  = create_reader_with_ext_values(test_map_image, test_map_text,data_
 
 
 
-#==============================================================================
-# ###
-#==============================================================================
+"""
+MODEL DEFINITION
+""""
 # Normalize the inputs
+# Mean substraction
 feature_scale = 1.0 / 256.0
 l_scale = 1.0 / 1000.0
 

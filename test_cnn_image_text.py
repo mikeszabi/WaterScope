@@ -4,15 +4,17 @@ Created on Tue Jun 27 07:54:05 2017
 @author: SzMike
 Test result on test list
 """
-#training_id='20171126-Gray'
+#training_id='20171127-All'
 
 from shutil import copyfile
 import csv
 import pandas as pd
 import os
+import shutil
 from collections import OrderedDict
 import numpy as np
 from PIL import Image
+from src_tools.file_helper import check_folder
 
 
 from src_train.train_config import train_params
@@ -31,6 +33,10 @@ num_channels = 3
 numFeature = image_height * image_width * num_channels
 
 write_misc=False
+write_folders=True
+
+save_dir=os.path.join(data_dir,'Images','tmp_val')
+
 
 #==============================================================================
 # RUN CONFIG
@@ -40,6 +46,8 @@ cfg=train_params(data_dir,training_id=training_id)
 
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
+
+
 
 
 type_dict={}
@@ -52,7 +60,7 @@ sorted_classes= OrderedDict(sorted(type_dict.items(), key=lambda x:x[1])).values
 
 
 # LOAD MODEL
-cnn_class=classifications.cnn_classification(model_file,image_height = image_height, image_width  = image_width)
+cnn_class=classifications.cnn_classification(model_file,im_height = image_height, im_width  = image_width)
 
 num_classes=cnn_class.pred.output.shape[0]
 
@@ -75,7 +83,14 @@ for i, row in df_test_image.iterrows():
    
     predicted_label, predicted_prob=cnn_class.classify(img, char_sizes=(maxl, minl))
     contingency_table[label,predicted_label]+=1
-    # rows are actual labels, cols are predictions,                  
+    # rows are actual labels, cols are predictions,     
+
+    if write_folders:
+        cur_dir=os.path.join(save_dir,type_dict[str(predicted_label)])
+        check_folder(folder=cur_dir,create=True)
+        shutil.copy(image_file, os.path.join(cur_dir,os.path.basename(image_file)))  
+ 
+             
     if predicted_label  != label:
         mis_item=[image_file,
         type_dict[str(predicted_label)],
