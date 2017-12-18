@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jun 27 07:54:05 2017
-
 @author: SzMike
-
 Test result on test list
-
 """
 #training_id='20171126-Gray'
 
@@ -108,12 +105,9 @@ stats=multiclass_statistics(cont_table,macro=False)
 ##
 """
 # check merged:
-
 print('Class map file: '+os.path.basename(cfg.merge_file))
-
 merge_file_1=os.path.join(r'C:\\Users\\picturio\\OneDrive\\WaterScope\\Images\\cropped_images','class_map_merge.csv')
 merge_file_0=os.path.join(r'C:\\Users\\picturio\\OneDrive\\WaterScope\\Images\\cropped_images','class_map.csv')
-
 merge_dict_0={}
 with open(merge_file_0, mode='r') as infile:
     reader = csv.reader(infile,delimiter=':')
@@ -137,20 +131,14 @@ for k,v in merge_dict_0.items():
     merge_dict[v]=merge_dict_1[k]
     
 cont_table_man_merge=cont_table.copy()
-
 for k,v in merge_dict.items():
     cont_table_man_merge.rename(columns = {k:v},inplace=True)
     cont_table_man_merge.rename(index = {k:v},inplace=True)
 classes_count=df_db['Class name'].value_counts()
-
 cont_table_man_merge.groupby(index)
-
 tmp_1=cont_table_man_merge.groupby(level=0).sum()
 tmp_2=pd.DataFrame()
 for taxon in tmp_1.index:
     tmp_2[taxon]=tmp_1[[taxon]].sum(axis=1)
-
-
 # print df.groupby('value')['tempx'].apply(' '.join).reset_index()
-
 """

@@ -34,7 +34,7 @@ data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 image_height = 64
 image_width  = 64
-num_channels = 3
+num_channels = 1
 numFeature = image_height * image_width * num_channels
 
 #==============================================================================
