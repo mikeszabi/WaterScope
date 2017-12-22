@@ -53,7 +53,7 @@ def crop_edge(gray,pixel_per_micron=1.5):
             char_sizes=np.asarray((prop_large.major_axis_length/pixel_per_micron,
                         prop_large.minor_axis_length/pixel_per_micron))
 
-    return bb,char_sizes
+    return bb,char_sizes, edges1
 
 #def crop_blob(gray):
 #    # DoG
@@ -109,7 +109,7 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     
     gray=rgb2gray(im)
     
-    bb, char_sizes=crop_edge(gray,pixel_per_micron=pixel_per_micron)
+    bb, char_sizes, edges1=crop_edge(gray,pixel_per_micron=pixel_per_micron)
 #        
     dx=bb[2]-bb[0]
     dy=bb[3]-bb[1]

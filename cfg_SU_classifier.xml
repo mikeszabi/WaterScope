@@ -1,30 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
     <folders>
+        <!-- root directory of the measurements - TO BE SET!!! -->
         <root>E:\OneDrive\WaterScope\Images\TEST\work_0</root>
+        <!-- name of the measurement folder relative to the root dir -->
         <measurement>Measurement</measurement>
+        <!-- name of the output folder relative to the root dir -->
         <classification>SUClassification</classification>
+        <!-- name of the result folder in the output folder -->
         <results>results</results>
+        <!-- name of the database folder- currently not used -->
         <database>Database</database>
+        <!-- name of the model folder - relative to the running exe -->
         <model>model</model>
     </folders>
     <files>
+        <!-- name of control log file - DO NOT CHANGE!!! -->
         <control>control.log</control>
+        <!-- name of settings file - currently not used -->
         <settings>settings-settings.xml</settings>
+        <!-- regexp definition of the Measure files, which are checked -->
         <measure>(Measure).*(.xml)</measure>
+        <!-- regexp definition of the image files, which are not processed -->
         <hologram>(hologram)</hologram>
+        <!-- name of the trash model -->
         <model_trash>None</model_trash>
+        <!-- name of the taxon model -->
         <model_taxon>cnn_model.dnn</model_taxon>
+        <!-- name of the typedict file -->
         <typedict>type_dict.csv</typedict>
     </files>
     <neural>
+        <!-- neural net parameters -->
         <im_height>64</im_height>
         <im_width>64</im_width>
         <num_channel>3</num_channel>
     </neural>
-    <processing>       
+    <processing>   
+        <!-- processing parameters -->    
+        <!-- auto start - program starts automatically -->    
         <auto_start>True</auto_start>
+        <!-- delete file is not being used -->    
     	 <delete_files>False</delete_files>
     </processing>
+    <threshold>     
+        <!-- confidence threshold for taxon prediction probabilities - TO BE SET!!! -->    
+        <trash_thresh>90</trash_thresh>
+    </threshold>
 </config>
 

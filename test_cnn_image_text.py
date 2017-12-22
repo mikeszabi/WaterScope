@@ -25,6 +25,8 @@ import classifications
 # SET THESE PARAMETERS!
 #==============================================================================
 data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+data_dir=os.path.join(r'E:\\','OneDrive\WaterScope')
+
 # model dimensions
 
 image_height = 64
@@ -70,20 +72,29 @@ df_test_text = pd.read_csv(cfg.test_text_list_file,delimiter=';')
 samples = {}
 contingency_table=np.zeros((num_classes,num_classes))
 misclassified=[]
-for i, row in df_test_image.iterrows():
+
+df_images_processed=df_test_image.reset_index(drop=True).copy()
+df_images_processed['predicted_type']=None
+df_images_processed['prob_taxon']=None
+pd.options.mode.chained_assignment = None  # default='warn'
+
+for index, row in df_test_image.iterrows():
 #    print(row['image'])
 #    i=200
     image_file=row['image']   
 
     label=row['category']
-    maxl=np.asarray([df_test_text.iloc[i]['maxl']]).astype('float32')[0]
-    minl=np.asarray([df_test_text.iloc[i]['minl']]).astype('float32')[0]
+    maxl=np.asarray([df_test_text.iloc[index]['maxl']]).astype('float32')[0]
+    minl=np.asarray([df_test_text.iloc[index]['minl']]).astype('float32')[0]
    
     img=Image.open(image_file)
    
     predicted_label, predicted_prob=cnn_class.classify(img, char_sizes=(maxl, minl))
     contingency_table[label,predicted_label]+=1
     # rows are actual labels, cols are predictions,     
+
+    df_images_processed['predicted_type'][index]=type_dict[str(predicted_label)]
+    df_images_processed['prob_taxon'][index]=predicted_prob
 
     if write_folders:
         cur_dir=os.path.join(save_dir,type_dict[str(predicted_label)])
