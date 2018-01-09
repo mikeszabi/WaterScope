@@ -15,6 +15,8 @@ from skimage import feature
 from skimage import morphology
 from skimage import measure
 from skimage import filters
+from skimage import segmentation
+
 
 io.use_plugin('pil') # Use only the capability of PIL
 #%matplotlib qt5
@@ -26,16 +28,30 @@ from skimage.color import rgb2gray
 
 import numpy as np
 
-min_extent_in_micron=20
+min_extent_in_micron=15
 
-def crop_edge(gray,pixel_per_micron=1.5):
+def getGradientMagnitude(gray):
+    #Get magnitude of gradient for given image"
+    assert gray.ndim==2, "Not 2D image"
+    mag = filters.scharr(gray)
+    return mag
+
+def getCannyMask(gray,morph=11):
+    assert gray.ndim==2, "Not 2D image"
     contr=gray.max()-gray.min()
     high_tsh=max(0.1,contr*0.32)
     low_tsh=max(0.005,contr*0.01)
 #    edges1 = feature.canny(gray, sigma=1.5, low_threshold=0.01, high_threshold=0.995, use_quantiles=True)
     edges1 = feature.canny(gray, sigma=2, low_threshold=low_tsh, high_threshold=high_tsh, use_quantiles=False)
 
-    edges2 = morphology.binary_dilation(edges1,morphology.disk(11))
+    canny = morphology.binary_dilation(edges1,morphology.disk(morph))
+    
+    return canny
+
+def crop_edge(im,pixel_per_micron=1.5):
+    
+    gray=rgb2gray(im)
+    edges2 = getCannyMask(gray)
  
     bb=(0,0,gray.shape[0],gray.shape[1])
     char_sizes=np.asarray((max(gray.shape)/pixel_per_micron,min(gray.shape)/pixel_per_micron))
@@ -53,7 +69,38 @@ def crop_edge(gray,pixel_per_micron=1.5):
             char_sizes=np.asarray((prop_large.major_axis_length/pixel_per_micron,
                         prop_large.minor_axis_length/pixel_per_micron))
 
-    return bb,char_sizes, edges1
+    return bb,char_sizes, label_im, edges2
+
+def crop_segment(im,pixel_per_micron=1.5):
+    
+    # initialize char_size and bounding box             
+    
+    bb=(0,0,im.shape[0],im.shape[1])
+    char_sizes=np.asarray((max(im.shape[0:1])/pixel_per_micron,min(im.shape[0:1])/pixel_per_micron))
+        
+    gray=im[:,:,2] #rgb2gray(im)
+    gray=filters.gaussian(gray,2)  
+    edge=getGradientMagnitude(gray)
+
+    label_im=np.zeros(gray.shape)
+   
+    if edge.max()>0.05:
+        # Scale: Free parameter. Smaller means larger clusters.
+        im_mask = segmentation.felzenszwalb(im[:,:,2], scale=125, sigma=1.3,min_size=int(min_extent_in_micron*min_extent_in_micron*pixel_per_micron*pixel_per_micron/50))
+        label_im=measure.label(im_mask>0)
+        
+        props = measure.regionprops(label_im,intensity_image=edge)
+        props_large=[prop for prop in props if prop.major_axis_length>min_extent_in_micron*pixel_per_micron]
+        
+        max_intensities = [prop.max_intensity for prop in props_large if prop.major_axis_length>min_extent_in_micron*pixel_per_micron]   
+        if max_intensities:    
+            prop_largest = props_large[np.argmax(max_intensities)]             
+            bb=prop_largest.bbox
+            char_sizes=np.asarray((prop_largest.major_axis_length/pixel_per_micron,
+                        prop_largest.minor_axis_length/pixel_per_micron))
+    
+
+    return bb,char_sizes, label_im, edge
 
 #def crop_blob(gray):
 #    # DoG
@@ -106,10 +153,12 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
 #   img_rgb=img
     
     im = np.asarray(img_rgb,dtype=np.uint8)
+    img_rgb.close()
+    gray=im[:,:,1] #rgb2gray(im)
     
-    gray=rgb2gray(im)
-    
-    bb, char_sizes, edges1=crop_edge(gray,pixel_per_micron=pixel_per_micron)
+#    bb, char_sizes, label_im, edges=crop_edge(gray,pixel_per_micron=pixel_per_micron)
+    bb, char_sizes, label_im, edges=crop_segment(im,pixel_per_micron=pixel_per_micron)
+
 #        
     dx=bb[2]-bb[0]
     dy=bb[3]-bb[1]

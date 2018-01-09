@@ -17,12 +17,14 @@ import src_tools.file_helper as fh
 # SET THESE PARAMETERS!
 #==============================================================================
 
-training_id='20171218'
-curdb_dir='cropped_korea_images'
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+training_id='20180103'
+curdb_dir='cropped_images'
+#data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+data_dir=os.path.join(r'E:\OneDrive\WaterScope')
 # cropped results are saved here
-save_dir=os.path.join(data_dir,'Images','tmp')
-
+#save_dir=os.path.join(data_dir,'Images','tmp')
+# save temp images to local folder
+save_dir=r'd:\DATA\WaterScope\tmp_cropped'
 #==============================================================================
 # RUN CONFIG
 #==============================================================================
@@ -70,18 +72,22 @@ for i, image_file in enumerate(image_list):
         except:
             print('loading error: '+image_file)
         
-#        if img_square:
-#            cat_dir=os.path.join(cfg.curdb_dir,category)
-#            if not os.path.exists(cat_dir):
-#                os.makedirs(cat_dir)
-#                        
+        if img_square:
+            cat_dir=os.path.join(cfg.curdb_dir,category)
+            if not os.path.exists(cat_dir):
+                os.makedirs(cat_dir)
+                        
 #            for alpha in [0,90,180,270]:
 #                img_rot=img_square.rotate(alpha, expand=True)
 #                crop_file=os.path.join(cfg.curdb_dir,category,
 #                                       Path(image_file).resolve().stem+'__'+str(alpha)+'.png')
 #                img_rot.save(crop_file)
-#        else:
-#            print('crop problem: '+image_file)   
+            crop_file=os.path.join(cfg.curdb_dir,category,os.path.basename(image_file))
+            img_square.save(crop_file)    
+            img_square.close()
+                
+        else:
+            print('crop problem: '+image_file)   
     else:        
         print('not in db: '+image_file)   
 

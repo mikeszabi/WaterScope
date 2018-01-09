@@ -25,6 +25,7 @@ def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category='')
         img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category)
     else:
         img_square=img.copy()
+    img.close()
     return img_square, char_sizes
 
 class cnn_classification:
