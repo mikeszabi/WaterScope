@@ -26,31 +26,29 @@ import csv
 from src_train.train_config import train_params
 #%matplotlib inline
 
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-
 #==============================================================================
 # SET THESE PARAMETERS!
 #==============================================================================
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-image_height = 64
-image_width  = 64
-num_channels = 1
-numFeature = image_height * image_width * num_channels
+curdb_dir='db_cropped_rot'
+data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 #==============================================================================
 # RUN CONFIG
 #==============================================================================
 
 
-cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id=training_id)
+cfg=train_params(data_dir,base_db='db_categorized',curdb_dir=curdb_dir,training_id=training_id)
+typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
+
+##
 
 train_map_o=os.path.join(cfg.train_dir,'train_map.txt')
 test_map_o=os.path.join(cfg.train_dir,'test_map.txt')
 #train_regr_labels=os.path.join(train_dir,'train_regrLabels.txt')
-data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
+#data_mean_file=os.path.join(cfg.train_dir,'data_mean.xml')
 
 
-def balanceMap(mapfile,min_count=100,max_count=500):
+def balanceMap(mapfile,min_count=100,max_count=200):
     df = pd.read_csv(mapfile,delimiter='\t',names=('image','label'))
     label_grouping = df.groupby('label')
 

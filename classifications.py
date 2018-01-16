@@ -21,10 +21,10 @@ import crop
 
 def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category=''):
     img = Image.open(image_file)
-    if cropped:
+    if cropped and img.mode=='RGBA':
         img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category)
     else:
-        img_square=img.copy()
+        img_square=img.copy() # 3 channel image
     img.close()
     return img_square, char_sizes
 

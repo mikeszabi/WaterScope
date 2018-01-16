@@ -9,10 +9,10 @@ import os
 from src_tools.file_helper import supermakedirs
 
 class train_params:
-    trainRatio=0.75
+    trainRatio=0.8
     included_extensions = ['*.jpg', '*.bmp', '*.png', '*.gif']
     
-    def __init__(self,data_dir='C:',base_db='db_categorized',curdb_dir='cropped_gray_images',training_id=''):
+    def __init__(self,data_dir='C:',base_db='db_categorized',curdb_dir='db_cropped',training_id=''):
         if os.path.exists(data_dir):
             self.base_imagedb_dir=os.path.join(data_dir,'Images',base_db)
             self.curdb_dir=os.path.join(data_dir,'Images',curdb_dir)

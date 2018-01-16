@@ -28,7 +28,7 @@ from skimage.color import rgb2gray
 
 import numpy as np
 
-min_extent_in_micron=15
+min_extent_in_micron=16
 
 def getGradientMagnitude(gray):
     #Get magnitude of gradient for given image"
@@ -48,10 +48,10 @@ def getCannyMask(gray,morph=11):
     
     return canny
 
-def crop_edge(im,pixel_per_micron=1.5):
+def crop_edge(im,pixel_per_micron=1.5,morph=11):
     
     gray=rgb2gray(im)
-    edges2 = getCannyMask(gray)
+    edges2 = getCannyMask(gray,morph)
  
     bb=(0,0,gray.shape[0],gray.shape[1])
     char_sizes=np.asarray((max(gray.shape)/pixel_per_micron,min(gray.shape)/pixel_per_micron))
@@ -71,23 +71,28 @@ def crop_edge(im,pixel_per_micron=1.5):
 
     return bb,char_sizes, label_im, edges2
 
-def crop_segment(im,pixel_per_micron=1.5):
+def crop_segment(im,pixel_per_micron=1.5,morph=7):
     
     # initialize char_size and bounding box             
     
     bb=(0,0,im.shape[0],im.shape[1])
     char_sizes=np.asarray((max(im.shape[0:1])/pixel_per_micron,min(im.shape[0:1])/pixel_per_micron))
         
-    gray=im[:,:,2] #rgb2gray(im)
-    gray=filters.gaussian(gray,2)  
-    edge=getGradientMagnitude(gray)
+    gray=rgb2gray(im)
+    gray_gauss_1=filters.gaussian(gray,2)
+    gray_gauss_2=filters.gaussian(gray,1)
+    gray_dog=gray_gauss_2-gray_gauss_1
+    edge=getGradientMagnitude(gray_dog)
 
     label_im=np.zeros(gray.shape)
    
-    if edge.max()>0.05:
+    if edge.max()>0.033:
+        min_size=int(min_extent_in_micron*min_extent_in_micron*pixel_per_micron*pixel_per_micron/16)
         # Scale: Free parameter. Smaller means larger clusters.
-        im_mask = segmentation.felzenszwalb(im[:,:,2], scale=125, sigma=1.3,min_size=int(min_extent_in_micron*min_extent_in_micron*pixel_per_micron*pixel_per_micron/50))
-        label_im=measure.label(im_mask>0)
+        im_segm = segmentation.felzenszwalb(gray_dog, scale=100,min_size=min_size)
+        
+        im_mask = morphology.binary_dilation(im_segm>0,morphology.disk(morph))
+        label_im=measure.label(im_mask)
         
         props = measure.regionprops(label_im,intensity_image=edge)
         props_large=[prop for prop in props if prop.major_axis_length>min_extent_in_micron*pixel_per_micron]
@@ -147,6 +152,7 @@ def get_pixelsize(img):
 
 def crop(img,pad_rate=0.25,save_file='',category=''):
 
+    assert img.mode=='RGBA', 'Not 4 channel image'
     pixel_per_micron = get_pixelsize(img)
     
     img_rgb=img.convert('RGB')     # if png
@@ -154,8 +160,9 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     
     im = np.asarray(img_rgb,dtype=np.uint8)
     img_rgb.close()
-    gray=im[:,:,1] #rgb2gray(im)
-    
+    #gray=im[:,:,1] #rgb2gray(im)
+    gray=rgb2gray(im)
+  
 #    bb, char_sizes, label_im, edges=crop_edge(gray,pixel_per_micron=pixel_per_micron)
     bb, char_sizes, label_im, edges=crop_segment(im,pixel_per_micron=pixel_per_micron)
 
@@ -180,21 +187,24 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
         img_square.paste(img_cropped, offset)
         
         if save_file and category:
-            fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 3))
+            fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))            
             fig.suptitle(category+'  '+"{:.0f}".format(char_sizes[0])+','+"{:.0f}".format(char_sizes[1]))
-        
-            ax1.imshow(im)
+                    
+            ax1.imshow(gray)
+            ax1.axis('off')  
+            
+            ax2.imshow(label_im)
+            ax2.axis('off')    
+            
+            ax3.imshow(im)
             #ax1.axis('off')
        
-            ax1.add_patch(patches.Rectangle(
+            ax3.add_patch(patches.Rectangle(
                         (bb[1], bb[0]),   # (x,y)
                             bb[3]-bb[1],        # width
                             bb[2]-bb[0],       # height
                             fill=False))
-            
-            ax2.imshow(np.asarray(img_square))
-            #ax2.axis('off')
-            
+         
             
             fig.savefig(save_file)
             plt.close('all')

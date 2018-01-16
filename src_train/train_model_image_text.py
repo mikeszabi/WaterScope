@@ -2,16 +2,18 @@
 """
 Created on Fri Dec 23 21:42:51 2016
 
-@author: picturio
+@author: mikesz
 """
 """
-training_id='20171128-Green'
+training_id='20180111'
 num_classes  = 30
 """   
  
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+#plt.switch_backend('TkAgg')
+
 
 #from cntk.device import try_set_default_device, gpu
 from cntk import cross_entropy_with_softmax, classification_error, input_variable, softmax, element_times
@@ -21,7 +23,7 @@ from cntk import momentum_sgd, learning_rate_schedule, momentum_as_time_constant
 from cntk.logging import log_number_of_parameters, ProgressPrinter, TensorBoardProgressWriter
 from cntk.ops import minus
 
-from src_train.model_functions import create_model_ext2
+from src_train.model_functions import create_model_ext
 from src_train.train_config import train_params
 from src_train.readers import create_reader_with_ext_values
 #from src_train.readers import create_reader
@@ -30,29 +32,33 @@ from src_train.readers import create_reader_with_ext_values
 #==============================================================================
 # SET THESE PARAMETERS!
 #==============================================================================
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+curdb_dir='db_cropped'
+data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 # model dimensions
 
 image_height = 64
 image_width  = 64
-num_channels = 1
+num_channels = 3
 numFeature = image_height * image_width * num_channels
 
 #==============================================================================
 # SET training parameters
 #==============================================================================
 max_epochs=150
-model_func=create_model_ext2
+model_func=create_model_ext
 
-epoch_size     = 48000 # training
-minibatch_size = 128 # training
+epoch_size     = 52000 # training
+minibatch_size = 64 # training
 
 #==============================================================================
 # RUN CONFIG
 #==============================================================================
 
 
-cfg=train_params(data_dir,training_id=training_id)
+cfg=train_params(data_dir,base_db='db_categorized',curdb_dir=curdb_dir,training_id=training_id)
+typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
+
+
 
 train_map_o=os.path.join(cfg.train_dir,'train_map.txt')
 test_map_o=os.path.join(cfg.train_dir,'test_map.txt')
@@ -71,7 +77,7 @@ test_map_text=os.path.join(cfg.train_dir,'test_map_text.txt')
 #
 # Evaluation action
 #
-def evaluate_test(input_map,reader_test,trainer,plot_data,epoch_size = 16000, minibatch_size=64,visualize=False):
+def evaluate_test(input_map,reader_test,trainer,plot_data,epoch_size = 13000, minibatch_size=32,visualize=False):
 
     # process minibatches and evaluate the model
     metric_numer    = 0
@@ -137,9 +143,10 @@ reader_test  = create_reader_with_ext_values(test_map_image, test_map_text,data_
 
 
 
-"""
-MODEL DEFINITION
-""""
+#==============================================================================
+#MODEL DEFINITION
+#==============================================================================
+
 # Normalize the inputs
 # Mean substraction
 feature_scale = 1.0 / 256.0
@@ -245,7 +252,7 @@ for epoch in range(max_epochs):       # loop over epochs
                 break
 
 evaluate_test(input_map,reader_test,trainer,plot_data,
-                          epoch_size=int(((1-cfg.trainRatio)/cfg.trainRatio)*epoch_size),visualize=True)
+                          epoch_size=int(((1-cfg.trainRatio)/cfg.trainRatio)*epoch_size),visualize=False)
 
 pred=softmax(z)
 

@@ -9,9 +9,9 @@ Creates train and test lists from the images
 Each classes used have to have enough observations (min_obs)
 creates type_dict
 """
-
-#training_id='20171120-All'
-
+"""
+training_id='20180111'
+"""
 import csv
 import pandas as pd
 import os
@@ -21,11 +21,26 @@ import collections
 from src_train.train_config import train_params
 #imp.reload(sys.modules['train_params'])
 
+#==============================================================================
+# SET THESE PARAMETERS!
+#==============================================================================
+curdb_dir='db_cropped_rot'
+data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
+
+#==============================================================================
+# RUN CONFIG
+#==============================================================================
+
+
+cfg=train_params(data_dir,base_db='db_categorized',curdb_dir=curdb_dir,training_id=training_id)
+typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
+
+
 def keysWithValue(aDict, target):
     return sorted(key for key, value in aDict.items() if target == value)
 
 # do startified random split in the data
-def get_stratified_train_test_inds(y,train_proportion=0.75):
+def get_stratified_train_test_inds(y,train_proportion=0.8):
     '''Generates indices, making random stratified split into training set and testing sets
     with proportions train_proportion and (1-train_proportion) of initial sample.
     y is any iterable indicating classes of each observation in the sample.
@@ -48,20 +63,6 @@ def get_stratified_train_test_inds(y,train_proportion=0.75):
     return np.where(train_inds)[0],np.where(test_inds)[0]
 
 
-
-#==============================================================================
-# SET THESE PARAMETERS!
-#==============================================================================
-curdb_dir='cropped_gray_images'
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
-
-#==============================================================================
-# RUN CONFIG
-#==============================================================================
-
-
-cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id=training_id)
-typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 
 """
 Read data description file
@@ -97,23 +98,59 @@ labels=[]
 for cl in classes:
     labels.append(keysWithValue(type_dict,cl)[0])
     
+    
+"""
+Spit to test and train sest
+Using original image names
+"""
+
+orig_names=[os.path.basename(row['Filename']).split('__')[0] for i, row in df_filtered.iterrows()]
+#import collections
+#print([item for item, count in collections.Counter(orig_names).items() if count >4])
+df_filtered['Origname']=orig_names
+
+cats=[]
+for name, group in df_filtered.groupby('Origname'):
+    cats.append(group.iloc[0]['Class name'])
+  
+train_inds,test_inds = get_stratified_train_test_inds(cats, cfg.trainRatio)
+
+train_inds_exp=[]
+test_inds_exp=[]
+for i, group in enumerate(df_filtered.groupby('Origname')):
+    if i in train_inds:
+        train_inds_exp=train_inds_exp+list(group[1].index)
+    else:
+        test_inds_exp=test_inds_exp+list(group[1].index)
+ 
+np.random.shuffle(train_inds_exp)
+np.random.shuffle(test_inds_exp)
+
+"""
+Label and size dataframes
+"""
 df_labeled=df_filtered[['Filename']].copy()
 df_labeled['category']=labels
 df_labeled.columns=['image','category']
 
 df_sizes=df_filtered[['minl','maxl']].copy()
 
+
 """
 Spit to test and train sest
 """
-train_inds,test_inds = get_stratified_train_test_inds(df_labeled['category'], cfg.trainRatio)
-np.random.shuffle(train_inds)
-np.random.shuffle(test_inds)
-df_train_image=df_labeled.iloc[train_inds]
-df_test_image=df_labeled.iloc[test_inds]
-df_train_text=df_sizes.iloc[train_inds]
-df_test_text=df_sizes.iloc[test_inds]
 
+
+df_train_image=df_labeled.loc[train_inds_exp]
+df_test_image=df_labeled.loc[test_inds_exp]
+df_train_text=df_sizes.loc[train_inds_exp]
+df_test_text=df_sizes.loc[test_inds_exp]
+
+#orig_names=[os.path.basename(row['image']).split('__')[0] for i, row in df_train_image.iterrows()]
+#df_train_image['Origname']=orig_names
+#for name, group in df_train_image.groupby('Origname'):
+#   if group.shape[0]!=4:
+#       print(group)
 
 """
 Do some stats

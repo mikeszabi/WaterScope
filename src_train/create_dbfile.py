@@ -19,17 +19,18 @@ import src_tools.file_helper as fh
 # SET THESE PARAMETERS!
 #==============================================================================
 
-training_id='20171128-Green'
-curdb_dir='cropped_green_images'
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
 count_threshold = 75*4
+
+training_id='20180111'
+curdb_dir='db_cropped_rot'
+data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 
 #==============================================================================
 # RUN CONFIG
 #==============================================================================
 
-cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id=training_id)
+cfg=train_params(data_dir,base_db='db_categorized',curdb_dir=curdb_dir,training_id=training_id)
 
 
 """
@@ -38,7 +39,7 @@ Class names from folder names
 image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)
 
 file_names=[f for f in image_list]
-class_names=[os.path.dirname(f).split('\\')[-1] for f in image_list]
+class_names=[os.path.dirname(f).split(os.sep)[-1] for f in image_list]
 df_db = pd.DataFrame(data={'Filename':file_names,'Class name':class_names})
 
 
@@ -54,7 +55,7 @@ classes_count=df_db['Class name'].value_counts()
 """
 Adding size info
 """
-size_file=os.path.join(cfg.curdb_dir,'char_sizes.txt')
+size_file=os.path.join(cfg.base_imagedb_dir,'char_sizes.txt')
 
 df_char_size=pd.read_csv(size_file,delimiter=';')
 minl=[]
