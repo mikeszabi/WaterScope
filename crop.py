@@ -28,6 +28,9 @@ from skimage.color import rgb2gray
 
 import numpy as np
 
+from src_tools.WS_sync_shifted_pictures import create_channels_tuple, correctRGB_shift
+
+
 min_extent_in_micron=16
 
 def getGradientMagnitude(gray):
@@ -150,7 +153,7 @@ def get_pixelsize(img):
     return pixel_per_micron
    
 
-def crop(img,pad_rate=0.25,save_file='',category=''):
+def crop(img,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
 
     assert img.mode=='RGBA', 'Not 4 channel image'
     pixel_per_micron = get_pixelsize(img)
@@ -160,11 +163,17 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
     
     im = np.asarray(img_rgb,dtype=np.uint8)
     img_rgb.close()
+    
+    if correct_RGBShift:
+        im_tuple=create_channels_tuple(im)
+        im_mod=correctRGB_shift(im_tuple)
+    else:
+        im_mod=im.copy()
     #gray=im[:,:,1] #rgb2gray(im)
     gray=rgb2gray(im)
   
 #    bb, char_sizes, label_im, edges=crop_edge(gray,pixel_per_micron=pixel_per_micron)
-    bb, char_sizes, label_im, edges=crop_segment(im,pixel_per_micron=pixel_per_micron)
+    bb, char_sizes, label_im, edges=crop_segment(im_mod,pixel_per_micron=pixel_per_micron)
 
 #        
     dx=bb[2]-bb[0]
@@ -176,7 +185,7 @@ def crop(img,pad_rate=0.25,save_file='',category=''):
                min(o[0]+rmax,gray.shape[0]),
                min(o[1]+rmax,gray.shape[1]))
         
-    im_cropped = im[bb_square[0]:bb_square[2], bb_square[1]:bb_square[3],:]
+    im_cropped = im_mod[bb_square[0]:bb_square[2], bb_square[1]:bb_square[3],:]
         
     if min(im_cropped.shape)>0:
         img_cropped = Image.fromarray(np.uint8(im_cropped))

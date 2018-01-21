@@ -13,24 +13,28 @@ from PIL import Image
 import pandas as pd
 import numpy as np
 import os
+import time
+
 from src_train.train_config import train_params
 import src_tools.file_helper as fh
 
 from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 
+
 import crop
 
 
 #data_dir=os.path.join('C:','Users','picturio','OneDrive','WaterScope')
-#data_dir=os.path.join('E:','OneDrive','WaterScope')
-data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
+data_dir=os.path.join('E:','OneDrive','WaterScope')
+#data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 
 cfg=train_params(data_dir,base_db='db_categorized',curdb_dir='crop_problems')
 
-#save_dir=os.path.join('D:','DATA','WaterScope','tmp_problem')
-save_dir=os.path.join('/','home','mikesz','Data','WaterScope','tmp_problem')
+
+save_dir=os.path.join('D:\\','DATA','WaterScope','tmp_problem')
+#save_dir=os.path.join('/','home','mikesz','Data','WaterScope','tmp_problem')
 
 #image_list=fh.imagelist_in_depth(cfg.base_imagedb_dir,level=2)
 image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)
@@ -58,7 +62,7 @@ Filter for classes
 #lengths=[]
 char_size_dict={}
 for i, image_file in enumerate(image_list):
-#   i=32
+#   i=5
     image_file=image_list[i]
     
     row=df_db.loc[df_db['Filename'] == image_file]
@@ -80,8 +84,11 @@ for i, image_file in enumerate(image_list):
                 img.close()
                 os.remove(image_file)
                 continue
-                    
-            img_square, char_sizes = crop.crop(img,pad_rate=0.25,save_file=save_file,category='problem')
+                
+            t=time.time()
+            img_square, char_sizes = crop.crop(img,pad_rate=0.25,save_file=save_file,category='',correct_RGBShift=True)
+            print('time elapsed: '+str(time.time()-t))
+
             
             img.close()
             img_square.close()
