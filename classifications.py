@@ -19,10 +19,10 @@ from cntk import load_model
 import crop
 
 
-def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category=''):
+def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
     img = Image.open(image_file)
     if cropped and img.mode=='RGBA':
-        img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category)
+        img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category,correct_RGBShift=correct_RGBShift)
     else:
         img_square=img.copy() # 3 channel image
     img.close()

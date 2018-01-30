@@ -26,15 +26,15 @@ import crop
 
 
 #data_dir=os.path.join('C:','Users','picturio','OneDrive','WaterScope')
-data_dir=os.path.join('E:','OneDrive','WaterScope')
-#data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
+#data_dir=os.path.join('E:','OneDrive','WaterScope')
+data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 
 cfg=train_params(data_dir,base_db='db_categorized',curdb_dir='crop_problems')
 
 
-save_dir=os.path.join('D:\\','DATA','WaterScope','tmp_problem')
-#save_dir=os.path.join('/','home','mikesz','Data','WaterScope','tmp_problem')
+#save_dir=os.path.join('D:\\','DATA','WaterScope','tmp_problem')
+save_dir=os.path.join('/','home','mikesz','Data','WaterScope','tmp_problem')
 
 #image_list=fh.imagelist_in_depth(cfg.base_imagedb_dir,level=2)
 image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=2)
@@ -86,7 +86,7 @@ for i, image_file in enumerate(image_list):
                 continue
                 
             t=time.time()
-            img_square, char_sizes = crop.crop(img,pad_rate=0.25,save_file=save_file,category='',correct_RGBShift=True)
+            img_square, char_sizes = crop.crop(img,pad_rate=0.25,save_file=save_file,category=category,correct_RGBShift=True)
             print('time elapsed: '+str(time.time()-t))
 
             

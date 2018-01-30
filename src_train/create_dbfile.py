@@ -7,7 +7,6 @@ Create image db file
 Uses class_map
 """
 
-
 import csv
 import numpy as np
 import pandas as pd
@@ -21,8 +20,8 @@ import src_tools.file_helper as fh
 
 count_threshold = 75*4
 
-training_id='20180111'
-curdb_dir='db_cropped_rot'
+training_id='20180125_blue'
+curdb_dir='db_cropped_blue'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 

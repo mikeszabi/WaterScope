@@ -51,9 +51,8 @@ def getCannyMask(gray,morph=11):
     
     return canny
 
-def crop_edge(im,pixel_per_micron=1.5,morph=11):
+def crop_edge(gray,pixel_per_micron=1.5,morph=11):
     
-    gray=rgb2gray(im)
     edges2 = getCannyMask(gray,morph)
  
     bb=(0,0,gray.shape[0],gray.shape[1])
@@ -74,14 +73,13 @@ def crop_edge(im,pixel_per_micron=1.5,morph=11):
 
     return bb,char_sizes, label_im, edges2
 
-def crop_segment(im,pixel_per_micron=1.5,morph=7):
+def crop_segment(gray,pixel_per_micron=1.5,morph=7):
     
     # initialize char_size and bounding box             
     
-    bb=(0,0,im.shape[0],im.shape[1])
-    char_sizes=np.asarray((max(im.shape[0:1])/pixel_per_micron,min(im.shape[0:1])/pixel_per_micron))
-        
-    gray=rgb2gray(im)
+    bb=(0,0,gray.shape[0],gray.shape[1])
+    char_sizes=np.asarray((max(gray.shape[0:1])/pixel_per_micron,min(gray.shape[0:1])/pixel_per_micron))
+            
     gray_gauss_1=filters.gaussian(gray,2)
     gray_gauss_2=filters.gaussian(gray,1)
     gray_dog=gray_gauss_2-gray_gauss_1
@@ -155,6 +153,7 @@ def get_pixelsize(img):
 
 def crop(img,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
 
+    # TODO: check if gray/1 channel image
     assert img.mode=='RGBA', 'Not 4 channel image'
     pixel_per_micron = get_pixelsize(img)
     
@@ -164,16 +163,25 @@ def crop(img,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
     im = np.asarray(img_rgb,dtype=np.uint8)
     img_rgb.close()
     
+    ###
+    # RGB layers shift correction
+    ####
+    
     if correct_RGBShift:
         im_tuple=create_channels_tuple(im)
         im_mod=correctRGB_shift(im_tuple)
     else:
         im_mod=im.copy()
-    #gray=im[:,:,1] #rgb2gray(im)
-    gray=rgb2gray(im)
+               
+    ###
+    # Gray conversion
+    ####
+    
+    #gray=im[:,:,2] 
+    gray=rgb2gray(im_mod)
   
 #    bb, char_sizes, label_im, edges=crop_edge(gray,pixel_per_micron=pixel_per_micron)
-    bb, char_sizes, label_im, edges=crop_segment(im_mod,pixel_per_micron=pixel_per_micron)
+    bb, char_sizes, label_im, edges=crop_segment(gray,pixel_per_micron=pixel_per_micron)
 
 #        
     dx=bb[2]-bb[0]

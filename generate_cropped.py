@@ -5,6 +5,7 @@ Created on Sun Jun 25 17:48:12 2017
 @author: SzMike
 """
 import os
+import time
 from pathlib import Path
 #from PIL import Image
 import pandas as pd
@@ -17,7 +18,7 @@ import src_tools.file_helper as fh
 # SET THESE PARAMETERS!
 #==============================================================================
 
-training_id='20180111'
+training_id='20180123'
 curdb_dir='db_cropped_rot'
 #data_dir=os.path.join('C:','Users','picturio','OneDrive','WaterScope')
 #data_dir=os.path.join('E:','OneDrive','WaterScope')
@@ -66,9 +67,13 @@ for i, image_file in enumerate(image_list):
             if not os.path.exists(save_dir_cat):
                 os.makedirs(save_dir_cat)
             save_file=os.path.join(save_dir_cat,os.path.basename(image_file))
+            t=time.time()
             img_square, char_sizes=classifications.create_image(image_file,cropped=True,
                                                     save_file=save_file,
-                                                    category=category)
+                                                    category=category,
+                                                    correct_RGBShift=True)
+            print('time elapsed: '+str(time.time()-t))
+
             char_size_dict[save_file]=char_sizes
         except:
             print('loading error: '+image_file)

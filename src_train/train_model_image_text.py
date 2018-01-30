@@ -5,7 +5,7 @@ Created on Fri Dec 23 21:42:51 2016
 @author: mikesz
 """
 """
-training_id='20180111'
+training_id='20180125_blue'
 num_classes  = 30
 """   
  
@@ -32,13 +32,13 @@ from src_train.readers import create_reader_with_ext_values
 #==============================================================================
 # SET THESE PARAMETERS!
 #==============================================================================
-curdb_dir='db_cropped'
+curdb_dir='db_cropped_blue'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 # model dimensions
 
 image_height = 64
 image_width  = 64
-num_channels = 3
+num_channels = 1
 numFeature = image_height * image_width * num_channels
 
 #==============================================================================
@@ -47,7 +47,7 @@ numFeature = image_height * image_width * num_channels
 max_epochs=150
 model_func=create_model_ext
 
-epoch_size     = 52000 # training
+epoch_size     = 56000 # training
 minibatch_size = 64 # training
 
 #==============================================================================

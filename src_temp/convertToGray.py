@@ -18,17 +18,19 @@ import src_tools.file_helper as fh
 #==============================================================================
 
 training_id='dummy'
-curdb_dir='cropped_images'
-data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+curdb_dir='db_cropped_rot'
+#data_dir=os.path.join(r'C:\Users','picturio','OneDrive\WaterScope')
+data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
+
 # cropped results are saved here
-save_dir=os.path.join(data_dir,'Images','cropped_green_images')
+save_dir=os.path.join(data_dir,'Images','db_cropped_blue')
 
 #==============================================================================
 # RUN CONFIG
 #==============================================================================
 
+cfg=train_params(data_dir,base_db='db_categorized',curdb_dir=curdb_dir,training_id=training_id)
 
-cfg=train_params(data_dir,curdb_dir=curdb_dir,training_id='dummy')
 
 
 """
@@ -36,7 +38,7 @@ Create image db
 """
 image_list=fh.imagelist_in_depth(cfg.curdb_dir,level=1)
 
-class_names=[os.path.dirname(f).split('\\')[-1] for f in image_list]
+class_names=[os.path.dirname(f).split(os.sep)[-1] for f in image_list]
 df_db = pd.DataFrame(data={'Filename':image_list,'Class name':class_names})
 
 #==============================================================================
@@ -62,7 +64,7 @@ for i, image_file in enumerate(image_list):
         if not os.path.exists(cat_dir):
             os.makedirs(cat_dir)
         crop_file=os.path.join(cat_dir, os.path.basename(image_file))
-        img_green.save(crop_file)
+        img_blue.save(crop_file)
 
      
     else:        

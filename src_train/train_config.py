@@ -9,7 +9,7 @@ import os
 from src_tools.file_helper import supermakedirs
 
 class train_params:
-    trainRatio=0.8
+    trainRatio=0.85
     included_extensions = ['*.jpg', '*.bmp', '*.png', '*.gif']
     
     def __init__(self,data_dir='C:',base_db='db_categorized',curdb_dir='db_cropped',training_id=''):

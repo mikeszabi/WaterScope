@@ -12,8 +12,6 @@ Created on Thu Dec 22 13:29:36 2016
 @author: SzMike
 """
 
-#training_id='20171126-Gray'
-
 # https://github.com/Microsoft/CNTK/blob/v2.0.beta6.0/Tutorials/CNTK_201A_CIFAR-10_DataLoader.ipynb
 
 import pandas as pd
@@ -29,7 +27,7 @@ from src_train.train_config import train_params
 #==============================================================================
 # SET THESE PARAMETERS!
 #==============================================================================
-curdb_dir='db_cropped_rot'
+curdb_dir='db_cropped_blue'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 #==============================================================================

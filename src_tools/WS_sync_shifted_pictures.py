@@ -399,7 +399,7 @@ def correctRGB_shift(img,pixels=10):
 
     else:
         disloc_first,center=calculate_image_dislocation(img,pixels)
-        print(disloc_first)
+        #print(disloc_first)
                     
         A=np.array([0,1,2]) #RGB color ids
         B=np.delete(A,np.where(A==center)[0],0) #center removed, contains relative image indexes in order   

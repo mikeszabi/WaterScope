@@ -10,7 +10,7 @@ Each classes used have to have enough observations (min_obs)
 creates type_dict
 """
 """
-training_id='20180111'
+training_id='20180123'
 """
 import csv
 import pandas as pd
@@ -24,7 +24,7 @@ from src_train.train_config import train_params
 #==============================================================================
 # SET THESE PARAMETERS!
 #==============================================================================
-curdb_dir='db_cropped_rot'
+curdb_dir='db_cropped_blue'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 #==============================================================================
