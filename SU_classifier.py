@@ -48,6 +48,7 @@ class params:
             self.files['control'] = tree.find('files/control').text 
             self.files['measure'] = tree.find('files/measure').text
             self.files['hologram'] = tree.find('files/hologram').text
+            self.files['probfn'] = tree.find('files/probfn').text
             model_trash_file=tree.find('files/model_trash').text
             if not model_trash_file=='None':
                 self.files['model_trash'] = os.path.join(tree.find('folders/model').text,
@@ -69,6 +70,7 @@ class params:
             
             self.thresholds['trash_thresh'] = int(tree.find('threshold/trash_thresh').text)
             self.processing['auto_start'] = tree.find('processing/auto_start').text
+            self.processing['ch_shift'] = tree.find('processing/ch_shift').text
             
 #            print(self.dirs)
 #            print(self.files)
@@ -92,10 +94,11 @@ class params:
                           
             
 class process:
-    def __init__(self):
-        self.params=params()
+    def __init__(self,params):
+        self.params=params
         self.cur_progress=0;
         self.elapsed=0;
+        self.correct_RGBShift=self.params.processing['ch_shift']=='True'
         if not self.params.files['model_trash']=='None':
             self.cnn_trash=classifications.cnn_classification(self.params.files['model_trash'],
                                                               im_height=self.params.neural['im_height'],
@@ -107,8 +110,11 @@ class process:
         print('load model '+self.params.files['model_taxon'])
         
     def process_oneimage(self,image_file):
+#        t=time.time()
+#        print(self.correct_RGBShift)
         if not self.params.files['model_trash']=='None':
-            img, dummy = classifications.create_image(image_file,cropped=False)
+            print(self.correct_RGBShift)
+            img, dummy = classifications.create_image(image_file,cropped=False,correct_RGBShift=self.correct_RGBShift)
             predicted_label_trash, prob_trash = self.cnn_trash.classify(img,char_sizes=None) # prob_trash is actually probability of object
         else:
             prob_trash=100
@@ -121,7 +127,7 @@ class process:
 #            self.text.see(tk.END)
         else:
             # NOT TRASH
-            img, char_sizes = classifications.create_image(image_file,cropped=True)
+            img, char_sizes = classifications.create_image(image_file,cropped=True,correct_RGBShift=self.correct_RGBShift)
             predicted_label, prob_taxon = self.cnn_taxon.classify(img,char_sizes=char_sizes)
             if prob_taxon < self.params.thresholds['trash_thresh']:
                 predicted_label_trash=0 # TRASH
@@ -130,7 +136,7 @@ class process:
                 predicted_type=self.params.type_dict_taxon[str(predicted_label)]
 #            self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob_taxon)+'\n')
 #            self.text.see(tk.END)
-            
+#        print(t-time.time()) 
         return predicted_type, prob_trash, prob_taxon
     
     def process_image_list(self,thread_queue=None,df_images2process=None):
@@ -171,6 +177,8 @@ class Application(tk.Frame):
        
     def __init__(self, master=None):
         self.params=params()
+        self.probfn=self.params.files['probfn']=='True'
+        
         if not self.params.dirs:
             print('config file - failed to load')
             return
@@ -180,7 +188,7 @@ class Application(tk.Frame):
         self.pack(fill="both", expand=True)
         self.createWidgets()
         
-        self.process=process()
+        self.process=process(self.params)
         
         if self.params.processing['auto_start']=='True':
             self.start()
@@ -350,7 +358,10 @@ class Application(tk.Frame):
                                          str("{0:.2f}".format(self.process.elapsed))+' secs\n')
             
             self.text.see(tk.END)
-            self.after(100,self.onUpdate)
+            if self.proc_mode=='test':
+                self.stop()
+            else:
+                self.onUpdate()
             
         except queue.Empty:
             self.change_state('running')
@@ -362,6 +373,7 @@ class Application(tk.Frame):
 
         measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
         date_folders=df_images_processed['dir1'].unique()
+        
         for dfo in date_folders:
             df_date=df_images_processed[df_images_processed['dir1']==dfo]
             measure_folders=df_date['dir2'].unique()
@@ -385,8 +397,13 @@ class Application(tk.Frame):
                 for index, df_image in df_measure.iterrows():
                     class_folder=os.path.join(res_folder,df_image['predicted_type'])
                     check_folder(folder=class_folder,create=True)
+                    if self.probfn:
+                        prob_str=str(int(round(df_image['prob_taxon'])))+'_'
+                    else:
+                        prob_str=''
+                    
                     shutil.copy(os.path.join(df_image['root'],df_image['image_file']),
-                                os.path.join(class_folder,df_image['image_file']))  
+                                os.path.join(class_folder,prob_str+df_image['image_file']))  
                 
                 # Read log
                 if self.params.files['control']:

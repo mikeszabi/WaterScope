@@ -29,6 +29,8 @@
         <model_taxon>cnn_model.dnn</model_taxon>
         <!-- name of the typedict file -->
         <typedict>type_dict.csv</typedict>
+        <!-- probability in file name -->
+        <probfn>True</probfn>
     </files>
     <neural>
         <!-- neural net parameters -->
@@ -39,13 +41,15 @@
     <processing>   
         <!-- processing parameters -->    
         <!-- auto start - program starts automatically -->    
-        <auto_start>True</auto_start>
+        <auto_start>False</auto_start>
+        <!-- color channel shift -->    
+        <ch_shift>False</ch_shift>
         <!-- delete file is not being used -->    
     	 <delete_files>False</delete_files>
     </processing>
     <threshold>     
         <!-- confidence threshold for taxon prediction probabilities - TO BE SET!!! -->    
-        <trash_thresh>90</trash_thresh>
+        <trash_thresh>50</trash_thresh>
     </threshold>
 </config>
 
