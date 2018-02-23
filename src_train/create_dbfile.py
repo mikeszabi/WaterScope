@@ -20,7 +20,7 @@ import src_tools.file_helper as fh
 
 count_threshold = 75*4
 
-training_id='20180125_blue'
+training_id='20180131_blue'
 curdb_dir='db_cropped_blue'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 

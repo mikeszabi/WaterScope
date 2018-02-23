@@ -59,7 +59,8 @@ for i, image_file in enumerate(image_list):
         img_rgb=img.convert('RGB')
         #img_gray=img.convert('L')
         img_red, img_green, img_blue = img_rgb.split()
-        
+
+        img_blue=Image.merge('RGB',(img_blue,img_blue,img_blue))
         cat_dir=os.path.join(save_dir,category)
         if not os.path.exists(cat_dir):
             os.makedirs(cat_dir)

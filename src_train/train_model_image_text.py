@@ -5,7 +5,7 @@ Created on Fri Dec 23 21:42:51 2016
 @author: mikesz
 """
 """
-training_id='20180125_blue'
+training_id='20180131_blue'
 num_classes  = 30
 """   
  
@@ -38,7 +38,7 @@ data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 image_height = 64
 image_width  = 64
-num_channels = 1
+num_channels = 3
 numFeature = image_height * image_width * num_channels
 
 #==============================================================================
