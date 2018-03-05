@@ -6,7 +6,7 @@ Created on Wed Mar 29 11:19:00 2017
 """
 
 import warnings
-
+import os
 import numpy as np
 from PIL import Image
 from skimage.transform import resize
@@ -14,33 +14,51 @@ from skimage import img_as_ubyte
 import skimage.io as io
 io.use_plugin('pil') # Use only the capability of PIL
 
-from cntk import load_model
+from cntk import load_model, combine
 
 import crop
 
 
 def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
     img = Image.open(image_file)
-    if cropped and img.mode=='RGBA':
-        img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category,correct_RGBShift=correct_RGBShift)
-    else:
-        img_square=img.copy() # 3 channel image
-    img.close()
+    img_square=None
+    char_sizes=None
+    img=None
+    if os.path.exists(image_file):
+        try:
+            img = Image.open(image_file)
+            
+            if cropped and img.mode=='RGBA':
+                img_square, char_sizes=crop.crop(img,pad_rate=0.25,save_file=save_file,category=category,correct_RGBShift=correct_RGBShift)
+            else:
+                img_square=img.copy() # 3 channel image
+        except:
+            print('loading error: '+image_file)    
+    if img is not None:
+        img.close()
     return img_square, char_sizes
 
 class cnn_classification:
-    def __init__(self,model_file=None,im_height = 64, im_width  = 64,im_mean=None):
+    def __init__(self,model_file=None,im_mean=None, model_output_layer=1):
         # model specific parameters
-        self.im_height=im_height # ToDo: parameter
-        self.im_width=im_width # ToDo: parameter
-
+     
+        # 0: Softmax, 1: Unnormalised output layer
+        assert model_output_layer in (0,1), "model output layer must be 0 or 1"
+        
         self.im_mean=im_mean
         #self.model_name='cnn_model.dnn'
         #model_file=os.path.join(self.param.model_dir,self.model_name)
         print('...loading classification model')
         # ToDo: do checks for image size and num_channel
         
-        self.pred=load_model(model_file)
+        mod = load_model(model_file)
+        nodes=mod.find_all_with_name('')
+        
+        self.pred  = combine([nodes[model_output_layer]])
+        
+        self.im_height=mod.arguments[0].shape[1]
+        self.im_width=mod.arguments[0].shape[2]
+        self.im_channels=mod.arguments[0].shape[0]
     
     def classify(self, img, char_sizes=None):
         

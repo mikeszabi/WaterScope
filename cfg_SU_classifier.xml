@@ -9,7 +9,7 @@
         <classification>SUClassification</classification>
         <!-- name of the result folder in the output folder -->
         <results>results</results>
-        <!-- name of the database folder- currently not used -->
+        <!-- name of the database folder- currently same as model folder -->
         <database>Database</database>
         <!-- name of the model folder - relative to the running exe -->
         <model>model</model>
@@ -29,14 +29,15 @@
         <model_taxon>cnn_model.dnn</model_taxon>
         <!-- name of the typedict file -->
         <typedict>type_dict.csv</typedict>
-        <!-- probability in file name -->
-        <probfn>True</probfn>
+        <!-- name of the threshold files -->
+        <threshold>thresholds.csv</threshold>
+        <!-- prediction strength in file name -->
+        <pred_strength_out>True</pred_strength_out>
     </files>
     <neural>
         <!-- neural net parameters -->
-        <im_height>64</im_height>
-        <im_width>64</im_width>
-        <num_channel>3</num_channel>
+        <!-- 0: Softmax, 1: Unnormalised output layer -->
+        <model_output_layer>1</model_output_layer>
     </neural>
     <processing>   
         <!-- processing parameters -->    
@@ -47,9 +48,5 @@
         <!-- delete file is not being used -->    
     	 <delete_files>False</delete_files>
     </processing>
-    <threshold>     
-        <!-- confidence threshold for taxon prediction probabilities - TO BE SET!!! -->    
-        <trash_thresh>50</trash_thresh>
-    </threshold>
 </config>
 

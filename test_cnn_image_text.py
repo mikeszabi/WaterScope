@@ -33,11 +33,6 @@ cfg=train_params(data_dir,base_db='db_categorized',curdb_dir=curdb_dir,training_
 
 # model dimensions
 
-image_height = 64
-image_width  = 64
-num_channels = 3
-numFeature = image_height * image_width * num_channels
-
 write_misc=False
 write_folders=True
 
@@ -66,7 +61,8 @@ sorted_classes= OrderedDict(sorted(type_dict.items(), key=lambda x:x[1])).values
 
 
 # LOAD MODEL
-cnn_class=classifications.cnn_classification(model_file,im_height = image_height, im_width  = image_width)
+cnn_class=classifications.cnn_classification(model_file)
+
 
 num_classes=cnn_class.pred.output.shape[0]
 

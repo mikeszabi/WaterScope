@@ -11,6 +11,7 @@ from tkinter.filedialog import askdirectory
 import csv
 import time
 import os
+import pandas as pd
 import shutil
 import xml.etree.ElementTree as ET
 from src_tools.file_helper import read_log, images2process_list_in_depth, check_folder
@@ -48,27 +49,20 @@ class params:
             self.files['control'] = tree.find('files/control').text 
             self.files['measure'] = tree.find('files/measure').text
             self.files['hologram'] = tree.find('files/hologram').text
-            self.files['probfn'] = tree.find('files/probfn').text
-            model_trash_file=tree.find('files/model_trash').text
-            if not model_trash_file=='None':
-                self.files['model_trash'] = os.path.join(tree.find('folders/model').text,
-                                              model_trash_file)
-            else:
-                self.files['model_trash']='None'    
+            self.files['pred_strength_out'] = tree.find('files/pred_strength_out').text  
             self.files['model_taxon'] = os.path.join(tree.find('folders/model').text,
                                               tree.find('files/model_taxon').text)
+            self.neural['model_output_layer'] = int(tree.find('neural/model_output_layer').text)
             self.files['typedict'] = os.path.join(tree.find('folders/model').text,
                                               tree.find('files/typedict').text)
             
             self.type_dict_taxon=self.get_typedict(self.files['typedict'])
-            
-            self.type_dict_trash={'0':'Others.Others.Trash','1':'Object'}
-            
-            self.neural['im_height'] = int(tree.find('neural/im_height').text)
-            self.neural['im_width'] = int(tree.find('neural/im_width').text)
-            self.neural['num_channel'] = int(tree.find('neural/num_channel').text)
-            
-            self.thresholds['trash_thresh'] = int(tree.find('threshold/trash_thresh').text)
+                        
+            self.files['threshold'] = os.path.join(tree.find('folders/model').text,
+                                              tree.find('files/threshold').text)
+
+            self.threshold_df_taxon=self.get_thresholds(self.files['threshold'])
+   
             self.processing['auto_start'] = tree.find('processing/auto_start').text
             self.processing['ch_shift'] = tree.find('processing/ch_shift').text
             
@@ -91,6 +85,28 @@ class params:
             for i in range(100):
                 type_dict[str(i)]=str(i)
         return type_dict
+    
+    def get_thresholds(self,threshold_file):
+        n_taxons=len(self.type_dict_taxon.values())
+        ths_init=pd.DataFrame(data={'Taxon':list(self.type_dict_taxon.values()),
+                                             'strength_tsh':[0]*n_taxons, # prediction strength
+                                             'min_l':[0]*n_taxons, # min longer size
+                                             'max_l':[10000]*n_taxons})
+        ths_out=ths_init.copy()
+        if os.path.isfile(threshold_file):
+           ths=pd.read_csv(threshold_file,sep=',')
+           print('thresholds loaded')
+           for row_index, row in ths.iterrows():
+               q=ths_init[ths_init['Taxon']==row['Taxon']]
+               if not q.empty:
+                   if 'max_l' in list(ths.columns.values):
+                       ths_out.loc[q.index[0],'max_l']=row['max_l']
+                   if 'min_l' in list(ths.columns.values):
+                       ths_out.loc[q.index[0],'min_l']=row['min_l']
+                   if 'strength_tsh' in list(ths.columns.values):
+                       ths_out.loc[q.index[0],'strength_tsh']=row['strength_tsh']
+#          
+        return ths_out
                           
             
 class process:
@@ -99,52 +115,47 @@ class process:
         self.cur_progress=0;
         self.elapsed=0;
         self.correct_RGBShift=self.params.processing['ch_shift']=='True'
-        if not self.params.files['model_trash']=='None':
-            self.cnn_trash=classifications.cnn_classification(self.params.files['model_trash'],
-                                                              im_height=self.params.neural['im_height'],
-                                                              im_width=self.params.neural['im_width'])
-            print('load model '+self.params.files['model_trash'])
-        self.cnn_taxon=classifications.cnn_classification(self.params.files['model_taxon'],
-                                                              im_height=self.params.neural['im_height'],
-                                                              im_width=self.params.neural['im_width'])
+        self.cnn_taxon=classifications.cnn_classification(self.params.files['model_taxon'],model_output_layer=self.params.neural['model_output_layer'])
+                    
         print('load model '+self.params.files['model_taxon'])
         
     def process_oneimage(self,image_file):
-#        t=time.time()
-#        print(self.correct_RGBShift)
-        if not self.params.files['model_trash']=='None':
-            print(self.correct_RGBShift)
-            img, dummy = classifications.create_image(image_file,cropped=False,correct_RGBShift=self.correct_RGBShift)
-            predicted_label_trash, prob_trash = self.cnn_trash.classify(img,char_sizes=None) # prob_trash is actually probability of object
-        else:
-            prob_trash=100
-            predicted_label_trash=1 # object!
-        if predicted_label_trash==0: # classified as trash
-            # TRASH goes to Recycle bin
-            predicted_type=self.params.type_dict_trash[str(predicted_label_trash)]
-            prob_taxon=0 # use np.NaN instead
-#            self.text.insert(tk.END, 'TRASH model result : '+'type : '+predicted_type+' ; prob : '+str(prob_trash)+'\n')
-#            self.text.see(tk.END)
-        else:
-            # NOT TRASH
-            img, char_sizes = classifications.create_image(image_file,cropped=True,correct_RGBShift=self.correct_RGBShift)
-            predicted_label, prob_taxon = self.cnn_taxon.classify(img,char_sizes=char_sizes)
-            if prob_taxon < self.params.thresholds['trash_thresh']:
-                predicted_label_trash=0 # TRASH
-                predicted_type=self.params.type_dict_trash[str(predicted_label_trash)]
-            else:
-                predicted_type=self.params.type_dict_taxon[str(predicted_label)]
-#            self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; prob : '+str(prob_taxon)+'\n')
+        predicted_label=None
+        predicted_type=None
+        
+        img, char_sizes = classifications.create_image(image_file,cropped=True,correct_RGBShift=self.correct_RGBShift)
+
+        if img is not None:
+            predicted_label, predicted_strength = self.cnn_taxon.classify(img,char_sizes=char_sizes)
+            # ToDo: implement threshold logic here on char_sizes and predicted strength - by class
+            predicted_type=self.params.type_dict_taxon[str(predicted_label)]
+            final_type=predicted_type
+            row=self.params.threshold_df_taxon.loc[self.params.threshold_df_taxon['Taxon']==predicted_type]       
+            min_l=row['min_l'].values[0]
+            max_l=row['max_l'].values[0]
+            strength_tsh=row['strength_tsh'].values[0]      
+            
+            if predicted_strength < strength_tsh: 
+                final_type='Others.Others.Unsure'
+            if char_sizes[0]<min_l: # char_sizes[0] larger axis length
+                final_type='Others.Others.InappropriateSize'
+            if char_sizes[0]>max_l:
+                final_type='Others.Others.InappropriateSize'
+                
+                
+#            self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; strength : '+str(strength_str)+'\n')
 #            self.text.see(tk.END)
 #        print(t-time.time()) 
-        return predicted_type, prob_trash, prob_taxon
+        return predicted_type, final_type, predicted_strength, char_sizes
     
     def process_image_list(self,thread_queue=None,df_images2process=None):
     
         df_images_processed=df_images2process.copy()
         df_images_processed['predicted_type']=None
-        df_images_processed['prob_trash']=None
-        df_images_processed['prob_taxon']=None
+        df_images_processed['final_type']=None
+        df_images_processed['predicted_strength']=None
+        df_images_processed['char_size_long']=None
+        df_images_processed['char_size_short']=None
         n_images2process=len(df_images2process)
         t=time.time()
         for index, fo in df_images2process.iterrows():
@@ -154,12 +165,15 @@ class process:
             self.cur_progress=float(index)/float(n_images2process)
             image_fullfile=os.path.join(fo['root'],fo['image_file'])
             
-            predicted_type, prob_trash, prob_taxon=self.process_oneimage(image_fullfile)
+            predicted_type, final_type, predicted_strength, char_sizes=self.process_oneimage(image_fullfile)
             
-            df_images_processed['predicted_type'][index]=predicted_type
-            df_images_processed['prob_trash'][index]=prob_trash
-            df_images_processed['prob_taxon'][index]=prob_taxon
-                    
+            if predicted_type is not None:
+                df_images_processed['predicted_type'][index]=predicted_type
+                df_images_processed['final_type'][index]=final_type
+                df_images_processed['predicted_strength'][index]=predicted_strength
+                df_images_processed['char_size_long'][index]=char_sizes[0]
+                df_images_processed['char_size_short'][index]=char_sizes[1]
+                        
         # put result to queue when finished
         self.elapsed=time.time() - t
         thread_queue.put(df_images_processed)
@@ -177,7 +191,7 @@ class Application(tk.Frame):
        
     def __init__(self, master=None):
         self.params=params()
-        self.probfn=self.params.files['probfn']=='True'
+        self.pred_strength_out=self.params.files['pred_strength_out']=='True'
         
         if not self.params.dirs:
             print('config file - failed to load')
@@ -348,6 +362,11 @@ class Application(tk.Frame):
             if self.proc_mode=='test':
                 df_images_processed.to_csv(os.path.join(self.test_dir,'classification_result.csv'),index=False)
             else:
+                res_folder=os.path.join(self.params.dirs['root'],
+                                         self.params.dirs['classification'],
+                                         self.params.dirs['results'])
+                check_folder(folder=res_folder,create=True)
+                df_images_processed.to_csv(os.path.join(res_folder,'classification_result.csv'),index=False)
                 self.create_output(df_images_processed)
             self.thread_queue.task_done()
             self.change_state('checking')
@@ -395,15 +414,15 @@ class Application(tk.Frame):
                 # Write to folders
     
                 for index, df_image in df_measure.iterrows():
-                    class_folder=os.path.join(res_folder,df_image['predicted_type'])
+                    class_folder=os.path.join(res_folder,df_image['final_type'])
                     check_folder(folder=class_folder,create=True)
-                    if self.probfn:
-                        prob_str=str(int(round(df_image['prob_taxon'])))+'_'
+                    if self.pred_strength_out:
+                        strength_str='{0:0{1}d}'.format(int(round(df_image['predicted_strength'])),5)+'_'
                     else:
-                        prob_str=''
+                        strength_str=''
                     
                     shutil.copy(os.path.join(df_image['root'],df_image['image_file']),
-                                os.path.join(class_folder,prob_str+df_image['image_file']))  
+                                os.path.join(class_folder,strength_str+df_image['image_file']))  
                 
                 # Read log
                 if self.params.files['control']:
