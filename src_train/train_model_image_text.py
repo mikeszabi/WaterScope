@@ -5,8 +5,8 @@ Created on Fri Dec 23 21:42:51 2016
 @author: mikesz
 """
 """
-training_id='20180131_blue'
-num_classes  = 30
+training_id='20180228'
+num_classes  = 25
 """   
  
 import os
@@ -23,7 +23,7 @@ from cntk import momentum_sgd, learning_rate_schedule, momentum_as_time_constant
 from cntk.logging import log_number_of_parameters, ProgressPrinter, TensorBoardProgressWriter
 from cntk.ops import minus
 
-from src_train.model_functions import create_model_ext
+from src_train.model_functions import create_model_ext3
 from src_train.train_config import train_params
 from src_train.readers import create_reader_with_ext_values
 #from src_train.readers import create_reader
@@ -32,7 +32,7 @@ from src_train.readers import create_reader_with_ext_values
 #==============================================================================
 # SET THESE PARAMETERS!
 #==============================================================================
-curdb_dir='db_cropped_blue'
+curdb_dir='db_cropped_rot'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 # model dimensions
 
@@ -45,7 +45,7 @@ numFeature = image_height * image_width * num_channels
 # SET training parameters
 #==============================================================================
 max_epochs=150
-model_func=create_model_ext
+model_func=create_model_ext3
 
 epoch_size     = 56000 # training
 minibatch_size = 64 # training

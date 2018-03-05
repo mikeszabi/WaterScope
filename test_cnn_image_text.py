@@ -4,7 +4,7 @@ Created on Tue Jun 27 07:54:05 2017
 @author: SzMike
 Test result on test list
 """
-training_id='20180131_blue'
+training_id='20180228'
 
 from shutil import copyfile
 import csv
@@ -21,7 +21,7 @@ from src_train.train_config import train_params
 from src_train.multiclass_stats import multiclass_statistics
 import classifications
 
-curdb_dir='db_cropped_blue'
+curdb_dir='db_cropped_rot'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 

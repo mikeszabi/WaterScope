@@ -27,7 +27,7 @@ from src_train.train_config import train_params
 #==============================================================================
 # SET THESE PARAMETERS!
 #==============================================================================
-curdb_dir='db_cropped_blue'
+curdb_dir='db_cropped_rot'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
 #==============================================================================
