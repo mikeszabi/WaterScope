@@ -20,7 +20,7 @@ import src_tools.file_helper as fh
 
 count_threshold = 75*4
 
-training_id='20180228'
+training_id='20180308'
 curdb_dir='db_cropped_rot'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
@@ -41,6 +41,8 @@ file_names=[f for f in image_list]
 class_names=[os.path.dirname(f).split(os.sep)[-1] for f in image_list]
 df_db = pd.DataFrame(data={'Filename':file_names,'Class name':class_names})
 
+df_db=df_db[df_db['Class name']!='Others'] 
+df_db=df_db[df_db['Class name']!='_Artefact']
 
 classes_count=df_db['Class name'].value_counts()
 

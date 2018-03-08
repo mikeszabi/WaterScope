@@ -20,7 +20,7 @@ import crop
 
 
 def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
-    img = Image.open(image_file)
+    img = None
     img_square=None
     char_sizes=None
     img=None

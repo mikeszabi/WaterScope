@@ -18,7 +18,7 @@ import src_tools.file_helper as fh
 # SET THESE PARAMETERS!
 #==============================================================================
 
-training_id='20180123'
+training_id='20180308'
 curdb_dir='db_cropped_rot'
 #data_dir=os.path.join('C:','Users','picturio','OneDrive','WaterScope')
 #data_dir=os.path.join('E:','OneDrive','WaterScope')
@@ -43,6 +43,7 @@ Class names from folder names
 """
 class_names=[os.path.dirname(f).split(os.sep)[-1] for f in image_list]
 df_db = pd.DataFrame(data={'Filename':image_list,'Class name':class_names})
+#df_db=df_db[df_db['Class name']=='Others']
 
 #==============================================================================
 # Read database to dataframe
@@ -71,14 +72,14 @@ for i, image_file in enumerate(image_list):
             img_square, char_sizes=classifications.create_image(image_file,cropped=True,
                                                     save_file=save_file,
                                                     category=category,
-                                                    correct_RGBShift=True)
+                                                    correct_RGBShift=False)
             print('time elapsed: '+str(time.time()-t))
 
-            char_size_dict[save_file]=char_sizes
         except:
             print('loading error: '+image_file)
         
-        if img_square:
+        if img_square is not None and char_sizes is not None:
+            char_size_dict[image_file]=char_sizes
             cat_dir=os.path.join(cfg.curdb_dir,category)
             if not os.path.exists(cat_dir):
                 os.makedirs(cat_dir)

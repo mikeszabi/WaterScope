@@ -75,7 +75,8 @@ def crop_edge(gray,pixel_per_micron=1.5,morph=11):
 
 def crop_segment(gray,pixel_per_micron=1.5,morph=7):
     
-    # initialize char_size and bounding box             
+    # initialize char_size and bounding box       
+    # char sizes in micron      
     
     bb=(0,0,gray.shape[0],gray.shape[1])
     char_sizes=np.asarray((max(gray.shape[0:1])/pixel_per_micron,min(gray.shape[0:1])/pixel_per_micron))

@@ -122,10 +122,13 @@ class process:
     def process_oneimage(self,image_file):
         predicted_label=None
         predicted_type=None
+        final_type=None
+        predicted_strength=None
+        char_sizes=[None]*2
         
         img, char_sizes = classifications.create_image(image_file,cropped=True,correct_RGBShift=self.correct_RGBShift)
 
-        if img is not None:
+        if img is not None and char_sizes is not None:
             predicted_label, predicted_strength = self.cnn_taxon.classify(img,char_sizes=char_sizes)
             # ToDo: implement threshold logic here on char_sizes and predicted strength - by class
             predicted_type=self.params.type_dict_taxon[str(predicted_label)]
