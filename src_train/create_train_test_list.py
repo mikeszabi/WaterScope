@@ -10,7 +10,7 @@ Each classes used have to have enough observations (min_obs)
 creates type_dict
 """
 """
-training_id='20180228'
+training_id='20180308'
 """
 import csv
 import pandas as pd

@@ -4,7 +4,7 @@ Created on Tue Jun 27 07:54:05 2017
 @author: SzMike
 Test result on test list
 """
-training_id='20180228'
+training_id='20180305'
 
 from shutil import copyfile
 import csv
@@ -21,6 +21,7 @@ from src_train.train_config import train_params
 from src_train.multiclass_stats import multiclass_statistics
 import classifications
 
+base_db='db_categorized'
 curdb_dir='db_cropped_rot'
 data_dir=os.path.join('/','home','mikesz','ownCloud','WaterScope')
 
@@ -47,9 +48,6 @@ cfg=train_params(data_dir,training_id=training_id)
 
 typedict_file=os.path.join(cfg.train_dir,'type_dict.csv')
 model_file=os.path.join(cfg.train_dir,'cnn_model.dnn')
-
-
-
 
 type_dict={}
 reader =csv.DictReader(open(typedict_file, 'rt'), delimiter=':')
@@ -97,9 +95,10 @@ for index, row in df_test_image.iterrows():
     df_images_processed['prob_taxon'][index]=predicted_prob
 
     if write_folders:
-        cur_dir=os.path.join(save_dir,type_dict[str(predicted_label)])
-        check_folder(folder=cur_dir,create=True)
-        shutil.copy(image_file, os.path.join(cur_dir,os.path.basename(image_file)))  
+        if image_file!=image_file.replace('__0',''): # save only first from the rotated images
+            cur_dir=os.path.join(save_dir,type_dict[str(predicted_label)])
+            check_folder(folder=cur_dir,create=True)
+            shutil.copy(image_file.replace('__0','').replace(curdb_dir,base_db), os.path.join(cur_dir,os.path.basename(image_file.replace('__0',''))))  
  
              
     if predicted_label  != label:

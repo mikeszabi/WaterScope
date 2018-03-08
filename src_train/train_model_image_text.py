@@ -5,7 +5,7 @@ Created on Fri Dec 23 21:42:51 2016
 @author: mikesz
 """
 """
-training_id='20180228'
+training_id='20180305'
 num_classes  = 25
 """   
  
@@ -47,7 +47,7 @@ numFeature = image_height * image_width * num_channels
 max_epochs=150
 model_func=create_model_ext3
 
-epoch_size     = 56000 # training
+epoch_size     = 50000 # training
 minibatch_size = 64 # training
 
 #==============================================================================
@@ -252,7 +252,7 @@ for epoch in range(max_epochs):       # loop over epochs
                 break
 
 evaluate_test(input_map,reader_test,trainer,plot_data,
-                          epoch_size=int(((1-cfg.trainRatio)/cfg.trainRatio)*epoch_size),visualize=False)
+                          epoch_size=int(((1-cfg.trainRatio)/cfg.trainRatio)*epoch_size),visualize=True)
 
 pred=softmax(z)
 
