@@ -3,7 +3,7 @@ import PIL
 import numpy as np
 import os
 import itertools
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 '''The two main functions correctRGB_shift_frompath and correctRGB_shift take
@@ -64,9 +64,9 @@ def list_of_files_in_dir(dir_name):
 def save_image_numpy(img,path,im_name,show=0):
     '''Input name should contain .png extension
     '''    
-    if show !=0:        
-        plt.imshow(img)
-        plt.show()
+#    if show !=0:        
+#        plt.imshow(img)
+#        plt.show()
     image = PIL.Image.fromarray(img.astype('uint8'), 'RGB')
     image.save(path+'\\'+im_name,"PNG")
     

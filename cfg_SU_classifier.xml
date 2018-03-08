@@ -23,8 +23,6 @@
         <measure>(Measure).*(.xml)</measure>
         <!-- regexp definition of the image files, which are not processed -->
         <hologram>(hologram)</hologram>
-        <!-- name of the trash model -->
-        <model_trash>None</model_trash>
         <!-- name of the taxon model -->
         <model_taxon>cnn_model.dnn</model_taxon>
         <!-- name of the typedict file -->
@@ -45,8 +43,8 @@
         <auto_start>False</auto_start>
         <!-- color channel shift -->    
         <ch_shift>False</ch_shift>
-        <!-- delete file is not being used -->    
-    	 <delete_files>False</delete_files>
+        <!-- save cropped files to temp folder -->    
+    	 <save_cropped>False</save_cropped>
     </processing>
 </config>
 

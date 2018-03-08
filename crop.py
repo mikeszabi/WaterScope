@@ -9,7 +9,7 @@ Created on Mon Jul 24 20:36:47 2017
 
 from PIL import Image
 
-import skimage.io as io
+##import skimage.io as io
 
 from skimage import feature
 from skimage import morphology
@@ -18,10 +18,10 @@ from skimage import filters
 from skimage import segmentation
 
 
-io.use_plugin('pil') # Use only the capability of PIL
-#%matplotlib qt5
-from matplotlib import pyplot as plt
-import matplotlib.patches as patches
+##io.use_plugin('pil') # Use only the capability of PIL
+##%matplotlib qt5
+#from matplotlib import pyplot as plt
+#import matplotlib.patches as patches
 
 from skimage.color import rgb2gray
 #from skimage.feature import blob_dog
@@ -203,28 +203,28 @@ def crop(img,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
         offset = (int(np.ceil((bg_w - img_w) / 2)), int(np.ceil((bg_h - img_h) / 2)))
         img_square.paste(img_cropped, offset)
         
-        if save_file and category:
-            fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))            
-            fig.suptitle(category+'  '+"{:.0f}".format(char_sizes[0])+','+"{:.0f}".format(char_sizes[1]))
-                    
-            ax1.imshow(gray)
-            ax1.axis('off')  
-            
-            ax2.imshow(label_im)
-            ax2.axis('off')    
-            
-            ax3.imshow(im)
-            #ax1.axis('off')
-       
-            ax3.add_patch(patches.Rectangle(
-                        (bb[1], bb[0]),   # (x,y)
-                            bb[3]-bb[1],        # width
-                            bb[2]-bb[0],       # height
-                            fill=False))
-         
-            
-            fig.savefig(save_file)
-            plt.close('all')
+#        if save_file and category:
+#            fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(9, 3))            
+#            fig.suptitle(category+'  '+"{:.0f}".format(char_sizes[0])+','+"{:.0f}".format(char_sizes[1]))
+#                    
+#            ax1.imshow(gray)
+#            ax1.axis('off')  
+#            
+#            ax2.imshow(label_im)
+#            ax2.axis('off')    
+#            
+#            ax3.imshow(im)
+#            #ax1.axis('off')
+#       
+#            ax3.add_patch(patches.Rectangle(
+#                        (bb[1], bb[0]),   # (x,y)
+#                            bb[3]-bb[1],        # width
+#                            bb[2]-bb[0],       # height
+#                            fill=False))
+#         
+#            
+#            fig.savefig(save_file)
+#            plt.close('all')
     else:
         img_square=[]
         

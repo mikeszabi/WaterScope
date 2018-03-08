@@ -11,8 +11,6 @@ import numpy as np
 from PIL import Image
 from skimage.transform import resize
 from skimage import img_as_ubyte
-import skimage.io as io
-io.use_plugin('pil') # Use only the capability of PIL
 
 from cntk import load_model, combine
 
@@ -20,7 +18,6 @@ import crop
 
 
 def create_image(image_file,cropped=True,pad_rate=0.25,save_file='',category='',correct_RGBShift=True):
-    img = Image.open(image_file)
     img_square=None
     char_sizes=None
     img=None

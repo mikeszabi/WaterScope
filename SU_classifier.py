@@ -65,6 +65,7 @@ class params:
    
             self.processing['auto_start'] = tree.find('processing/auto_start').text
             self.processing['ch_shift'] = tree.find('processing/ch_shift').text
+            self.processing['save_cropped'] = tree.find('processing/save_cropped').text
             
 #            print(self.dirs)
 #            print(self.files)
@@ -115,6 +116,7 @@ class process:
         self.cur_progress=0;
         self.elapsed=0;
         self.correct_RGBShift=self.params.processing['ch_shift']=='True'
+        self.save_cropped=self.params.processing['save_cropped']=='True'
         self.cnn_taxon=classifications.cnn_classification(self.params.files['model_taxon'],model_output_layer=self.params.neural['model_output_layer'])
                     
         print('load model '+self.params.files['model_taxon'])
@@ -122,10 +124,23 @@ class process:
     def process_oneimage(self,image_file):
         predicted_label=None
         predicted_type=None
+        predicted_type=None
+        final_type=None
+        predicted_strength=None
+        char_sizes=None
         
-        img, char_sizes = classifications.create_image(image_file,cropped=True,correct_RGBShift=self.correct_RGBShift)
+        if self.save_cropped:
+            tmp_folder=os.path.join(os.path.curdir,'tmp_crop')
+            check_folder(tmp_folder,create=True)
+            save_file=os.path.join(tmp_folder,os.path.basename(image_file))
+            category='cropped'
+        else:
+            save_file=''
+            category=''
+        img, char_sizes = classifications.create_image(image_file,cropped=True,correct_RGBShift=self.correct_RGBShift,
+                                                       save_file=save_file,category=category)
 
-        if img is not None:
+        if img is not None and char_sizes is not None:
             predicted_label, predicted_strength = self.cnn_taxon.classify(img,char_sizes=char_sizes)
             # ToDo: implement threshold logic here on char_sizes and predicted strength - by class
             predicted_type=self.params.type_dict_taxon[str(predicted_label)]
@@ -167,7 +182,7 @@ class process:
             
             predicted_type, final_type, predicted_strength, char_sizes=self.process_oneimage(image_fullfile)
             
-            if predicted_type is not None:
+            if predicted_type is not None and char_sizes is not None:
                 df_images_processed['predicted_type'][index]=predicted_type
                 df_images_processed['final_type'][index]=final_type
                 df_images_processed['predicted_strength'][index]=predicted_strength
