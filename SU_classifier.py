@@ -7,14 +7,14 @@ Created on Mon Aug 28 19:59:11 2017
 
 import tkinter as tk
 from tkinter import ttk
-from tkinter.filedialog import askdirectory
+from tkinter.filedialog import askdirectory, askopenfilename      
 import csv
 import time
 import os
 import pandas as pd
 import shutil
 import xml.etree.ElementTree as ET
-from src_tools.file_helper import read_log, images2process_list_in_depth, check_folder
+from src_tools.file_helper import read_log, images2process_list_in_depth, images2process_from_csv, check_folder
 import classifications
 from src_tools.results2xml import XMLWriter
 
@@ -56,6 +56,8 @@ class params:
             self.files['typedict'] = os.path.join(tree.find('folders/model').text,
                                               tree.find('files/typedict').text)
             
+            self.additional_classes=['Others.Others.Unsure','Others.Others.InappropriateSize']
+            
             self.type_dict_taxon=self.get_typedict(self.files['typedict'])
                         
             self.files['threshold'] = os.path.join(tree.find('folders/model').text,
@@ -72,7 +74,14 @@ class params:
 #            print(self.neural)
 #            print(self.processing)
 #            print(self.thresholds)
-            
+     
+#    def set_additional_classes(self,additional_classes):
+#        self.additional_classes=additional_classes
+        
+    def get_classes(self):
+        classes=list(self.type_dict_taxon.values())
+        classes=classes+self.additional_classes
+        return sorted(classes)
         
     def get_typedict(self,typedict_file):
         type_dict={}
@@ -86,6 +95,21 @@ class params:
             for i in range(100):
                 type_dict[str(i)]=str(i)
         return type_dict
+    
+    def get_merge_dict(self,cur_dir):
+        class_map_file=os.path.join(cur_dir,'class_map.csv')
+        merge_dict={}
+        try:
+            with open(class_map_file, mode='r') as infile:
+                reader = csv.reader(infile,delimiter=':')
+                next(reader,None) # skip header
+                for rows in reader:
+                    if rows:
+                        if rows[0][0]!='#':
+                            merge_dict[rows[0]]=rows[1]
+        except:
+            print('missing class_map.csv')
+        return merge_dict
     
     def get_thresholds(self,threshold_file):
         n_taxons=len(self.type_dict_taxon.values())
@@ -118,7 +142,7 @@ class process:
         self.correct_RGBShift=self.params.processing['ch_shift']=='True'
         self.save_cropped=self.params.processing['save_cropped']=='True'
         self.cnn_taxon=classifications.cnn_classification(self.params.files['model_taxon'],model_output_layer=self.params.neural['model_output_layer'])
-                    
+        self.classes=[]            
         print('load model '+self.params.files['model_taxon'])
         
     def process_oneimage(self,image_file):
@@ -197,9 +221,9 @@ class process:
 
 class Application(tk.Frame):
     #running=False
-    running_states=('checking','running','stopped','test')
+#    running_states=('checking','running','stopped','test')
     running_state='stopped'
-    proc_modes=('ws','test')
+#    proc_modes=('ws','test','evaluate')
     proc_mode='ws'
     cur_folder='.'
     test_dir=cur_folder
@@ -207,7 +231,7 @@ class Application(tk.Frame):
     def __init__(self, master=None):
         self.params=params()
         self.pred_strength_out=self.params.files['pred_strength_out']=='True'
-        
+        self.merge_dict={}
         if not self.params.dirs:
             print('config file - failed to load')
             return
@@ -260,7 +284,10 @@ class Application(tk.Frame):
         test_button = tk.Button(separator, text="TEST", command=self.test, width=10)
         test_button.pack(side=tk.RIGHT)
         
-        start_button = tk.Button(separator, text="START", command=self.start, width=10)
+        start_button = tk.Button(separator, text="EVALUATE", command=self.evaluate, width=10)
+        start_button.pack(side=tk.RIGHT)
+        
+        start_button = tk.Button(separator, text="MEASURE", command=self.start, width=10)
         start_button.pack(side=tk.LEFT)
         
         stop_button = tk.Button(separator, text="STOP", command=self.stop, width=10)
@@ -286,6 +313,15 @@ class Application(tk.Frame):
             self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'test processing\n')
             self.text.see(tk.END)
             self.onTest()
+            self.change_state('stopped')
+            
+    def evaluate(self):
+        if self.running_state=='stopped':
+            self.change_state('checking')
+            self.proc_mode='evaluate'
+            self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'evaluating\n')
+            self.text.see(tk.END)
+            self.onEvaluate()
             self.change_state('stopped')
         
     def start(self):
@@ -317,13 +353,39 @@ class Application(tk.Frame):
         self.date_entry.insert(0, time.strftime("%Y/%m/%d"))
      
     def onTest(self):
-        self.test_dir=askdirectory()
+        self.test_dir=askdirectory(title = 'Open a test directory')
         self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'processing: '+self.test_dir+'\n')
         self.text.see(tk.END)
 #       measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
         # get list of images to process
         if os.path.exists(self.test_dir):
             df_images2process=images2process_list_in_depth(self.test_dir,file2check1=[],file2check2=['dummy'],level=1)
+            if not df_images2process.empty:
+                self.text.insert(tk.END, str(len(df_images2process))+' images are being processed\n')
+            
+                self.thread_queue = queue.Queue()
+                self.thread = threading.Thread(target=self.process.process_image_list, args=(self.thread_queue, df_images2process))
+                self.change_state('running')
+
+                self.thread.start()
+                self.after(100, self.listen_for_result)
+                
+                # write to csv
+                
+                    
+        self.date_entry.delete(0, tk.END)
+        self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
+        
+    def onEvaluate(self):
+        self.eval_dir=askdirectory(title = 'Open a directory to evaluate')
+        self.eval_file=askopenfilename(title='Choose an image list to process',filetypes=[('.csv',('*.csv',))])
+        self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'processing: '+self.eval_file+'\n')
+        self.text.see(tk.END)
+#       measure_dir=os.path.join(self.params.dirs['root'],self.params.dirs['measurement'])
+        # get list of images to process
+        if os.path.exists(self.eval_dir) and os.path.exists(self.eval_file):
+            self.merge_dict=self.params.get_merge_dict(self.eval_dir)
+            df_images2process=images2process_from_csv(self.merge_dict,self.eval_file,self.eval_dir)
             if not df_images2process.empty:
                 self.text.insert(tk.END, str(len(df_images2process))+' images are being processed\n')
             
@@ -376,6 +438,14 @@ class Application(tk.Frame):
             df_images_processed = self.thread_queue.get(0)
             if self.proc_mode=='test':
                 df_images_processed.to_csv(os.path.join(self.test_dir,'classification_result.csv'),index=False)
+            elif self.proc_mode=='evaluate':
+                df_images_processed.to_csv(os.path.join(self.eval_dir,'classification_result.csv'),index=False)
+                cont_table=self.create_contingency(df_images_processed)
+                self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'creating contingency table..\n')
+                self.text.see(tk.END)
+
+                cont_table.to_csv(os.path.join(self.eval_dir,'contingency_table.csv'),index=True)
+        
             else:
                 res_folder=os.path.join(self.params.dirs['root'],
                                          self.params.dirs['classification'],
@@ -392,7 +462,7 @@ class Application(tk.Frame):
                                          str("{0:.2f}".format(self.process.elapsed))+' secs\n')
             
             self.text.see(tk.END)
-            if self.proc_mode=='test':
+            if self.proc_mode=='test' or self.proc_mode=='evaluate':
                 self.stop()
             else:
                 self.onUpdate()
@@ -402,6 +472,19 @@ class Application(tk.Frame):
             self.progress['value']=self.process.cur_progress
             self.after(1000, self.listen_for_result)
     
+    def create_contingency(self,df_images_processed):
+        sorted_classes=self.params.get_classes()
+        #num_classes=len(sorted_classes)
+        cont_table=pd.DataFrame(0,index=sorted_classes,    
+              columns=sorted_classes)
+
+
+        for index, row in df_images_processed.iterrows():
+
+            cont_table[row['dir2']][row['final_type']]+=1
+            # rows are actual labels, cols are predictions,     
+
+        return cont_table
         
     def create_output(self,df_images_processed):
 

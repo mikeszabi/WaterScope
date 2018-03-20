@@ -6,9 +6,11 @@ Created on Wed Jul 26 12:57:02 2017
 """
 
 import os
+from pathlib import Path
 import glob
 import re
 import pandas as pd
+import csv
 
 def walklevel(root_dir, level=1):
     root_dir = root_dir.rstrip(os.path.sep)
@@ -36,7 +38,7 @@ def images2process_list_in_depth(measure_dir,file2check1=['settings-settings.xml
     i_row=-1
     included_extenstions = ['png']
     for root, dirs, files in walklevel(measure_dir, level=level):
-        dir_struct=root.split('\\')
+        dir_struct=root.split(os.path.sep)
         if len(dir_struct)==measure_dir.count(os.path.sep)+level:
              # root: ..\\Measure\\DATE\\MeasureID
             if files:
@@ -58,6 +60,40 @@ def images2process_list_in_depth(measure_dir,file2check1=['settings-settings.xml
                                     df_images2process.loc[i_row]=[root,'','',image_file]
     
     return df_images2process
+
+def images2process_from_csv(merge_dict,eval_file,cur_dir,sep=';'):
+
+    df_images2process=images2process_list_in_depth(cur_dir,file2check1=[],file2check2=['dummy'],level=2)
+    drop_list=[]
+    
+    class_map_file=os.path.join(cur_dir,'class_map.csv')
+    if not os.path.exists(class_map_file):
+        print('class_map file does not exist in the selected directory')
+        return df_images2process
+    try:
+        df_list=pd.read_csv(eval_file,sep=sep)
+        test_images_list=[]
+        for i, row in df_list.iterrows():
+            path=Path(row['image'])
+            base,ext=os.path.splitext(path.parts[-1])
+            test_images_list.append(base.split('__')[0]+ext)
+        test_images_list=set(test_images_list)
+#        i_row=-1
+        for i, row in df_images2process.iterrows():
+            image_file=row['image_file']
+            if image_file in test_images_list:          
+                path=Path(row['root'])
+                taxon_type=merge_dict[path.parts[-1]]
+                df_images2process.loc[i]['dir2']=taxon_type
+            else:
+                drop_list.append(i)
+    except:
+        print('Evaluate file problems')
+        return pd.DataFrame(columns=['root','dir1','dir2','image_file'])
+  
+    df_images2process.drop(df_images2process.index[drop_list], inplace=True)
+    return df_images2process
+
 
 def read_log(file_name):
     # log is "=" separated

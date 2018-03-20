@@ -77,14 +77,7 @@ Group merging - using class_map file
 class_map maps the folder names to taxon names
 """
 print('Class map file: '+os.path.basename(cfg.merge_file))
-merge_dict={}
-with open(cfg.merge_file, mode='r') as infile:
-    reader = csv.reader(infile,delimiter=':')
-    next(reader,None) # skip header
-    for rows in reader:
-        if rows:
-            if rows[0][0]!='#':
-                merge_dict[rows[0]]=rows[1]
+merge_dict=fh.read_merge_dict(cfg.merge_file)
 
 for k,v in merge_dict.items():
     df_db.replace(k,v,inplace=True)
