@@ -377,7 +377,7 @@ class Application(tk.Frame):
         self.date_entry.insert(0, time.strftime("%Y/%m/%d")+' '+time.strftime("%I:%M:%S"))
         
     def onEvaluate(self):
-        self.eval_dir=askdirectory(title = 'Open a directory to evaluate')
+        self.eval_dir=os.path.normpath(str(askdirectory(title = 'Open a directory to evaluate')))
         self.eval_file=askopenfilename(title='Choose an image list to process',filetypes=[('.csv',('*.csv',))])
         self.text.insert(tk.END, self.date_entry.get()+' '+time.strftime("%I:%M:%S")+' : '+'processing: '+self.eval_file+'\n')
         self.text.see(tk.END)
@@ -481,8 +481,10 @@ class Application(tk.Frame):
 
         for index, row in df_images_processed.iterrows():
 
-            cont_table[row['dir2']][row['final_type']]+=1
-            # rows are actual labels, cols are predictions,     
+            if row['dir2'] in sorted_classes:
+                cont_table[row['dir2']][row['final_type']]+=1
+                # rows are actual labels, cols are predictions,     
+                # we do not handle folder names which have no representation in the type_dict file
 
         return cont_table
         
