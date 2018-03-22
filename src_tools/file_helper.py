@@ -69,28 +69,32 @@ def images2process_from_csv(merge_dict,eval_file,cur_dir,sep=';'):
     class_map_file=os.path.join(cur_dir,'class_map.csv')
     if not os.path.exists(class_map_file):
         print('class_map file does not exist in the selected directory')
-        return df_images2process
-    try:
-        df_list=pd.read_csv(eval_file,sep=sep)
-        test_images_list=[]
-        for i, row in df_list.iterrows():
-            path=Path(row['image'])
-            base,ext=os.path.splitext(path.parts[-1])
-            test_images_list.append(base.split('__')[0]+ext)
-        test_images_list=set(test_images_list)
-#        i_row=-1
+        return pd.DataFrame(columns=['root','dir1','dir2','image_file'])
+    if not os.path.exists(eval_file):
+        print('eval file does not exist in the selected directory')
+        return pd.DataFrame(columns=['root','dir1','dir2','image_file'])
+    df_list=pd.read_csv(eval_file,sep=sep)
+    test_images_list=[]
+    for i, row in df_list.iterrows():
+        path=Path(row['image'])
+        base,ext=os.path.splitext(path.parts[-1])
+        test_images_list.append(base.split('__')[0]+ext) # takes effect only when pre-processed images are used
+    test_images_list=set(test_images_list)
+
+    if len(test_images_list)>0:
         for i, row in df_images2process.iterrows():
             image_file=row['image_file']
             if image_file in test_images_list:          
                 path=Path(row['root'])
-                taxon_type=merge_dict[path.parts[-1]]
-                df_images2process.loc[i]['dir2']=taxon_type
+                if path.parts[-1] in list(merge_dict.keys()):
+                    taxon_type=merge_dict[path.parts[-1]]
+                    df_images2process.loc[i]['dir2']=taxon_type
             else:
                 drop_list.append(i)
-    except:
-        print('Evaluate file problems')
-        return pd.DataFrame(columns=['root','dir1','dir2','image_file'])
-  
+    else:
+       print('eval file does not contain images to process')
+       return pd.DataFrame(columns=['root','dir1','dir2','image_file']) 
+    
     df_images2process.drop(df_images2process.index[drop_list], inplace=True)
     return df_images2process
 
