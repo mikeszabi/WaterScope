@@ -56,7 +56,7 @@ class params:
             self.files['typedict'] = os.path.join(tree.find('folders/model').text,
                                               tree.find('files/typedict').text)
             
-            self.additional_classes=['Others.Others.Unsure','Others.Others.InappropriateSize']
+            self.additional_classes=['Others.Others.Unsure','Others.Others.InappropriateSize','Others.Others.InappropriateShape']
             
             self.type_dict_taxon=self.get_typedict(self.files['typedict'])
                         
@@ -67,6 +67,7 @@ class params:
    
             self.processing['auto_start'] = tree.find('processing/auto_start').text
             self.processing['ch_shift'] = tree.find('processing/ch_shift').text
+            self.processing['use_neural'] = tree.find('processing/use_neural').text
             self.processing['save_cropped'] = tree.find('processing/save_cropped').text
             
 #            print(self.dirs)
@@ -116,7 +117,9 @@ class params:
         ths_init=pd.DataFrame(data={'Taxon':list(self.type_dict_taxon.values()),
                                              'strength_tsh':[0]*n_taxons, # prediction strength
                                              'min_l':[0]*n_taxons, # min longer size
-                                             'max_l':[10000]*n_taxons})
+                                             'max_l':[10000]*n_taxons,
+                                             'min_rate':[0]*n_taxons, # rate: min_l/max_l
+                                             'max_rate':[1]*n_taxons})
         ths_out=ths_init.copy()
         if os.path.isfile(threshold_file):
            ths=pd.read_csv(threshold_file,sep=',')
@@ -126,6 +129,12 @@ class params:
                if not q.empty:
                    if 'max_l' in list(ths.columns.values):
                        ths_out.loc[q.index[0],'max_l']=row['max_l']
+                   if 'min_l' in list(ths.columns.values):
+                       ths_out.loc[q.index[0],'min_l']=row['min_l']
+                   if 'min_rate' in list(ths.columns.values):
+                       ths_out.loc[q.index[0],'min_rate']=row['min_rate']
+                   if 'max_rate' in list(ths.columns.values):
+                       ths_out.loc[q.index[0],'max_rate']=row['max_rate']
                    if 'min_l' in list(ths.columns.values):
                        ths_out.loc[q.index[0],'min_l']=row['min_l']
                    if 'strength_tsh' in list(ths.columns.values):
@@ -145,10 +154,9 @@ class process:
         self.classes=[]            
         print('load model '+self.params.files['model_taxon'])
         
-    def process_oneimage(self,image_file):
+    def process_oneimage(self,image_file,man_type):
         predicted_label=None
-        predicted_type=None
-        predicted_type=None
+        predicted_type='Others.Others.Unsure'
         final_type=None
         predicted_strength=None
         char_sizes=None
@@ -165,22 +173,38 @@ class process:
                                                        save_file=save_file,category=category)
 
         if img is not None and char_sizes is not None:
-            predicted_label, predicted_strength = self.cnn_taxon.classify(img,char_sizes=char_sizes)
-            # ToDo: implement threshold logic here on char_sizes and predicted strength - by class
-            predicted_type=self.params.type_dict_taxon[str(predicted_label)]
-            final_type=predicted_type
-            row=self.params.threshold_df_taxon.loc[self.params.threshold_df_taxon['Taxon']==predicted_type]       
-            min_l=row['min_l'].values[0]
-            max_l=row['max_l'].values[0]
-            strength_tsh=row['strength_tsh'].values[0]      
+            if self.params.processing['use_neural']=='True':
+                predicted_label, predicted_strength = self.cnn_taxon.classify(img,char_sizes=char_sizes)
+    
+                predicted_type=self.params.type_dict_taxon[str(predicted_label)]
+            else:
+                predicted_strength=65535
+                predicted_type=man_type
             
-            if predicted_strength < strength_tsh: 
-                final_type='Others.Others.Unsure'
-            if char_sizes[0]<min_l: # char_sizes[0] larger axis length
-                final_type='Others.Others.InappropriateSize'
-            if char_sizes[0]>max_l:
-                final_type='Others.Others.InappropriateSize'
+            final_type=predicted_type
+            
+            # Do checks on threshold, shape and size
+            row=self.params.threshold_df_taxon.loc[self.params.threshold_df_taxon['Taxon']==predicted_type]
+            if not row.empty: 
+                min_l=row['min_l'].values[0]
+                max_l=row['max_l'].values[0]
+                min_rate=row['min_rate'].values[0]
+                max_rate=row['max_rate'].values[0]
+                strength_tsh=row['strength_tsh'].values[0]      
                 
+                if char_sizes[0]>0:
+                    rate=char_sizes[1]/char_sizes[0]
+                else:
+                    rate=-1
+                if predicted_strength < strength_tsh: 
+                    final_type='Others.Others.Unsure'
+                if char_sizes[0]<min_l: # char_sizes[0] larger axis length
+                    final_type='Others.Others.InappropriateSize'
+                if char_sizes[0]>max_l:
+                    final_type='Others.Others.InappropriateSize'
+                if rate<min_rate or rate>max_rate:
+                    final_type='Others.Others.InappropriateShape'
+                    
                 
 #            self.text.insert(tk.END, 'TAXON model result : '+'type : '+predicted_type+' ; strength : '+str(strength_str)+'\n')
 #            self.text.see(tk.END)
@@ -204,7 +228,7 @@ class process:
             self.cur_progress=float(index)/float(n_images2process)
             image_fullfile=os.path.join(fo['root'],fo['image_file'])
             
-            predicted_type, final_type, predicted_strength, char_sizes=self.process_oneimage(image_fullfile)
+            predicted_type, final_type, predicted_strength, char_sizes=self.process_oneimage(image_fullfile,fo['dir2'])
             
             if predicted_type is not None and char_sizes is not None:
                 df_images_processed['predicted_type'][index]=predicted_type
